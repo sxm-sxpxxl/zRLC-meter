@@ -7,10 +7,10 @@ onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
-	"last_search.8040E7BB" = "Main Camera"
+	"last_search.8040E7BB" = "Examp"
 	"OpenInspectorPreview.8040E7BB" = "0"
-	"currentGroup.8040E7BB" = "scene"
-	"last_search.7BEC51F9" = ""
+	"currentGroup.8040E7BB" = "all"
+	"last_search.7BEC51F9" = "Large"
 	"OpenInspectorPreview.7BEC51F9" = "0"
 	"currentGroup.7BEC51F9" = "asset"
 }
@@ -57,6 +57,7 @@ providers = {
 	}
 }
 recentSearches = [
+	"e"
 ]
 searchItemFavorites = [
 ]

@@ -7,60 +7,40 @@ using UnityEngine.UI;
 
 namespace ChartAndGraph
 {
-    class ChartItemTextBlend : ChartItemLerpEffect
+    public class ChartItemTextBlend : ChartItemLerpEffect
     {
+        [SerializeField] private Image image;
+        
+        private Text mText;
+        private Shadow[] mShadows;
+        
+        private Dictionary<UnityEngine.Object, float> mInitialValues = new Dictionary<UnityEngine.Object, float>();
+        private CanvasRenderer mRenderer = null;
+        private float mInitialAlphaForImage = 0f;
 
-        Text mText;
-        Shadow[] mShadows;
-        Dictionary<UnityEngine.Object, float> mInitialValues = new Dictionary<UnityEngine.Object, float>();
-        CanvasRenderer mRenderer = null;
         protected override void Start()
         {
             base.Start();
+            
             mText = GetComponent<Text>();
             mShadows = GetComponents<Shadow>();
-            foreach(Shadow s in mShadows)
+            mInitialAlphaForImage = image != null ? image.color.a : 0f;
+
+            foreach (Shadow s in mShadows)
+            {
                 mInitialValues.Add(s, s.effectColor.a);
+            }
+
             ApplyLerp(0f);
+        }
+        
+        internal override Quaternion Rotation => Quaternion.identity;
 
-        }
-        internal override Quaternion Rotation
-        {
-            get
-            {
-                return Quaternion.identity;
-            }
-        }
+        internal override Vector3 ScaleMultiplier => Vector3.one;
 
-        internal override Vector3 ScaleMultiplier
-        {
-            get
-            {
-                return new Vector3(1f, 1f, 1f);
-            }
-        }
+        internal override Vector3 Translation => Vector3.zero;
 
-        internal override Vector3 Translation
-        {
-            get
-            {
-                return Vector3.zero;
-            }
-        }
-
-        protected override float GetStartValue()
-        {
-            if (mText != null)
-                return mText.color.a;
-            return 0f;
-        }
-
-        CanvasRenderer EnsureRenderer()
-        {
-            if (mRenderer == null)
-                mRenderer = GetComponent<CanvasRenderer>();
-            return mRenderer;
-        }
+        protected override float GetStartValue() => mText != null ? mText.color.a : 0f;
 
         protected override void ApplyLerp(float value)
         {
@@ -74,11 +54,13 @@ namespace ChartAndGraph
                 c.a = Mathf.Lerp(0f, inital, value);
                 s.effectColor = c;
             }
-            if (mText != null)
+
+            if (image != null)
             {
-                Color c = mText.color;
-                c.a = Mathf.Clamp(value,0f,1f);
-                mText.color = c;
+                Color c = image.color;
+                c.a = Mathf.Lerp(0f, mInitialAlphaForImage, value);
+                image.color = c;
+                
                 CanvasRenderer rend = EnsureRenderer();
                 if (rend != null)
                 {
@@ -94,6 +76,38 @@ namespace ChartAndGraph
                     }
                 }
             }
+            
+            if (mText != null)
+            {
+                Color c = mText.color;
+                c.a = Mathf.Clamp(value,0f,1f);
+                mText.color = c;
+                
+                CanvasRenderer rend = EnsureRenderer();
+                if (rend != null)
+                {
+                    if (value <= 0f)
+                    {
+                        if (rend.cull == false)
+                            rend.cull = true;
+                    }
+                    else
+                    {
+                        if (rend.cull == true)
+                            rend.cull = false;
+                    }
+                }
+            }
+        }
+        
+        private CanvasRenderer EnsureRenderer()
+        {
+            if (mRenderer == null)
+            {
+                mRenderer = GetComponent<CanvasRenderer>();   
+            }
+            
+            return mRenderer;
         }
     }
 }

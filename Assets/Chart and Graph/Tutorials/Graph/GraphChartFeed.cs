@@ -1,28 +1,24 @@
 ﻿using UnityEngine;
 using ChartAndGraph;
 
-public class GraphChartFeed : MonoBehaviour
+[RequireComponent(typeof(GraphChartBase))]
+public sealed class GraphChartFeed : MonoBehaviour
 {
-	void Start ()
+    [SerializeField, Range(1, 100)] private int pointsQuantity = 50;
+    [SerializeField] private string chartCategoryName = "Player 1";
+    
+	private void Start ()
     {
         GraphChartBase graph = GetComponent<GraphChartBase>();
-        if (graph != null)
+        
+        graph.DataSource.StartBatch();
+        graph.DataSource.ClearCategory(chartCategoryName);
+            
+        for (int i = 0; i < pointsQuantity; i++)
         {
-            graph.DataSource.StartBatch();
-            graph.DataSource.ClearCategory("Player 1");
-            graph.DataSource.ClearAndMakeBezierCurve("Player 2");
-            for (int i = 0; i <30; i++)
-            {
-                graph.DataSource.AddPointToCategory("Player 1",Random.value*10f,Random.value*10f + 20f);
-                if (i == 0)
-                    graph.DataSource.SetCurveInitialPoint("Player 2",0f, Random.value * 10f + 10f);
-                else
-                    graph.DataSource.AddLinearCurveToCategory("Player 2", 
-                                                                    new DoubleVector2(i * 10f/30f, Random.value * 10f + 10f));
-            }
-
-            graph.DataSource.MakeCurveCategorySmooth("Player 2");
-            graph.DataSource.EndBatch();
+            graph.DataSource.AddPointToCategory(chartCategoryName, Random.value * 10f, Random.value * 10f + 20f);
         }
+
+        graph.DataSource.EndBatch();
     }
 }

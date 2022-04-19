@@ -35,15 +35,6 @@ public partial class HoverText : MonoBehaviour
             return;
         }
 
-        var bar = GetComponent<CanvasBarChart>();
-        if (bar != null)
-        {
-            mChart = bar;
-            bar.BarHovered.AddListener(BarHover);
-            bar.NonHovered.AddListener(NonHover);
-            return;
-        }
-
         HoverStart();
     }
 
@@ -121,12 +112,6 @@ public partial class HoverText : MonoBehaviour
         obj.transform.localPosition = local;
         mItems.Add(text);
         StartCoroutine(SelectText(text));
-    }
-
-    void BarHover(BarChart.BarEventArgs args)
-    {
-        String data = ChartAdancedSettings.Instance.FormatFractionDigits(fractionDigits, args.Value);
-        PopText(data, args.TopPosition,true);
     }
 
     void GraphHover(GraphChartBase.GraphEventArgs args)
