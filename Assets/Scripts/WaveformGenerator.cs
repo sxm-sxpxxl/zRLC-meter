@@ -3,9 +3,9 @@ using UnityEngine;
 
 public enum SamplingRateStandard
 {
-    [InspectorName("Telephone (8000 Hz)")]
+    [InspectorName("8000 Hz")]
     Telephone = 8000,
-    [InspectorName("Audio CD (44100 Hz)")]
+    [InspectorName("44100 Hz")]
     AudioCD = 44100
 }
 
@@ -16,9 +16,9 @@ public enum Channels
 }
 
 [RequireComponent(typeof(AudioSource))]
-public sealed class WaveformAudioSource : MonoBehaviour
+public sealed class WaveformGenerator : MonoBehaviour
 {
-    public event Action<float[], int> OnSamplesChunkReady = delegate { };
+    public event Action<float[]> OnSamplesChunkReady = delegate { };
     
     [Header("Audio Generation Settings")]
     [SerializeField] private SamplingRateStandard samplingRate = SamplingRateStandard.AudioCD;
@@ -32,6 +32,8 @@ public sealed class WaveformAudioSource : MonoBehaviour
     private AudioSource _audioSource;
     private int _currentSamplePosition;
     private float[] _samples;
+
+    public float WaveFrequency => waveFrequency;
     
     private int SamplingRate => (int) samplingRate;
     private int SamplesLength => Mathf.CeilToInt(SamplingRate * clipLength);
@@ -52,24 +54,24 @@ public sealed class WaveformAudioSource : MonoBehaviour
         _audioSource.Play();
     }
 
+    private void OnAudioFilterRead(float[] samplesChunk, int channels)
+    {
+        OnSamplesChunkReady.Invoke(samplesChunk);
+    }
+
     private void OnPCMRead(float[] samplesChunk)
     {
+        float normalizedWaveFactor = 2f * Mathf.PI * waveFrequency;
+        
         for (int i = 0; i < samplesChunk.Length; i++)
         {
-            samplesChunk[i] = Mathf.Sin(2f * Mathf.PI * waveFrequency * _currentSamplePosition / SamplingRate);
-
-            if (_currentSamplePosition < _samples.Length)
-            {
-                _samples[_currentSamplePosition] = samplesChunk[i];
-            }
-            
+            samplesChunk[i] = Mathf.Sin(normalizedWaveFactor * _currentSamplePosition / SamplingRate);
             _currentSamplePosition++;
         }
     }
 
     private void OnPCMSetPosition(int newPositionInSamples)
     {
-        OnSamplesChunkReady(_samples, 0);
         _currentSamplePosition = newPositionInSamples;
     }
 }
