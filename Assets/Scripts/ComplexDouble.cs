@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using UnityEngine;
 
 [DebuggerDisplay("{real} + {img}i")]
 public struct ComplexDouble
@@ -12,6 +13,8 @@ public struct ComplexDouble
     public double SqrMagnitude => real * real + img * img;
 
     public double AngleInRad => Math.Atan2((float) img, (float) real);
+
+    public double AngleInDeg => AngleInRad * Mathf.Rad2Deg;
     
     public ComplexDouble(double real, double img)
     {

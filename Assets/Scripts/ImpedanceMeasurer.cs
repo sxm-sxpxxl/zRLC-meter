@@ -1,12 +1,17 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 [DisallowMultipleComponent]
 public sealed class ImpedanceMeasurer : MonoBehaviour
 {
     private const float OctaveFactor = 0.7032f;
-    
-    [Header("Dependencies")]
+
+    public event Action OnImpedanceMeasuringStarted = delegate { };
+    public event Action OnImpedanceMeasuringFinished = delegate { };
+    public event Action<ComplexDouble, float> OnImpedanceMeasured = delegate { };
+
+        [Header("Dependencies")]
     [SerializeField] private WaveformGenerator waveformGenerator;
     [SerializeField] private MicrophoneListener microphoneListener;
     [SerializeField] private ImpedanceComputer impedanceComputer;
@@ -21,6 +26,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
     [SerializeField, Range(10f, 1000f)] private float transientTimeInMs = 100f;
 
     private float _octaveScaler = 0f;
+    private Coroutine _measuringProcessCoroutine;
 
     [field: Header("Debug Info"), SerializeField]
     private float CurrentFrequency { get; set; }
@@ -41,41 +47,59 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
         }
     }
 
-    private void Start()
+    public void StartMeasuring()
     {
-        StartCoroutine(StartMeasureProcess());
+        StopMeasuring();
+        
+        _measuringProcessCoroutine = StartCoroutine(StartMeasureProcess());
+        OnImpedanceMeasuringStarted.Invoke();
+    }
+
+    public void StopMeasuring()
+    {
+        if (_measuringProcessCoroutine != null)
+        {
+            StopCoroutine(_measuringProcessCoroutine);
+            StopGenerationAndListening();
+        }
     }
 
     private IEnumerator StartMeasureProcess()
     {
+        float previousFrequency;
         CurrentFrequency = lowCutOffFrequency;
         _octaveScaler = OctaveFactor * (1f / (int) frequencyIncrement);
-        
+
         do
         {
-            if (waveformGenerator.IsGenerating)
+            previousFrequency = CurrentFrequency;
+            
+            if (waveformGenerator.IsGenerating && microphoneListener.IsListening)
             {
-                waveformGenerator.StopGeneration();
+                StopGenerationAndListening();
             }
 
-            if (microphoneListener.IsListening)
-            {
-                microphoneListener.StopListening();
-            }
-            
             waveformGenerator.StartGeneration(CurrentFrequency, samplingRate);
             microphoneListener.StartListening(samplingRate);
 
             yield return new WaitForSecondsRealtime(transientTimeInMs / 1000f);
 
-            double impedanceMagnitude = impedanceComputer.ComputeImpedance(0).Magnitude;
-            float capacitance = impedanceComputer.ComputeCapacitance(0);
-
-            Debug.Log($"impedance: {impedanceMagnitude} | capacitance: {capacitance}");
+            ComplexDouble impedance = impedanceComputer.ComputeImpedance(0);
+            Debug.Log($"|Z| = {impedance.Magnitude}");
+            OnImpedanceMeasured.Invoke(impedance, CurrentFrequency);
+            
             CurrentFrequency += CurrentFrequency * _octaveScaler;
         }
-        while (CurrentFrequency < highCutOffFrequency);
+        while (CurrentFrequency < highCutOffFrequency + previousFrequency * _octaveScaler);
+
+        CurrentFrequency = previousFrequency;
+        StopGenerationAndListening();
         
+        OnImpedanceMeasuringFinished.Invoke();
+    }
+
+    private void StopGenerationAndListening()
+    {
         waveformGenerator.StopGeneration();
         microphoneListener.StopListening();
     }
