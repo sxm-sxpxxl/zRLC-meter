@@ -123,6 +123,59 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &4616743
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4616744}
+  - component: {fileID: 4616745}
+  m_Layer: 0
+  m_Name: ImpedanceMeasurer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4616744
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4616743}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4616745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4616743}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96e5309a16064862b98b5084bd396195, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  waveformGenerator: {fileID: 1765252995}
+  microphoneListener: {fileID: 857489592}
+  impedanceComputer: {fileID: 1696217560}
+  lowCutOffFrequency: 20
+  highCutOffFrequency: 200
+  frequencyIncrement: 24
+  samplingRate: 44100
+  transientTimeInMs: 100
+  <CurrentFrequency>k__BackingField: 0
 --- !u!1 &19312023
 GameObject:
   m_ObjectHideFlags: 0
@@ -2854,7 +2907,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &671036632
 GameObject:
@@ -3963,7 +4016,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f67d11191024a44af79480b42d9350c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  samplingRate: 44100
   latencyInSec: 0
 --- !u!82 &857489593
 AudioSource:
@@ -3974,7 +4026,7 @@ AudioSource:
   m_GameObject: {fileID: 857489590}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 5358660857577274020, guid: ecc2b670a0b8f604387822c9b50f68fa, type: 2}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
@@ -4281,7 +4333,7 @@ RectTransform:
   - {fileID: 1772472090}
   - {fileID: 1777492123}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -4538,7 +4590,7 @@ RectTransform:
   m_Children:
   - {fileID: 1490729741}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -6274,7 +6326,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1350578769
 GameObject:
@@ -7606,7 +7658,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1696217560
 MonoBehaviour:
@@ -8119,7 +8171,8 @@ MonoBehaviour:
   channels: 2
   isLoop: 1
   clipLength: 1
-  waveFrequency: 100
+  <WaveFrequency>k__BackingField: 0
+  <IsGenerating>k__BackingField: 0
 --- !u!1001 &1772472089
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -25,23 +25,13 @@ public sealed class ImpedanceComputer : MonoBehaviour
         microphoneListener.OnSamplesChunkReady -= OnMicrophoneListenerSamplesChunkReady;
     }
 
-    private void OnWaveformSamplesChunkReady(float[] samplesChunk)
-    {
-        _outputSpectrum = FFT.ForwardTransform(ComplexDouble.FloatToComplex(samplesChunk));
-    }
-    
-    private void OnMicrophoneListenerSamplesChunkReady(float[] samplesChunk)
-    {
-        _inputSpectrum = FFT.ForwardTransform(ComplexDouble.FloatToComplex(samplesChunk));
-    }
-
-    private ComplexDouble ComputeImpedance(int samplePosition)
+    public ComplexDouble ComputeImpedance(int samplePosition)
     {
         Assert.IsTrue(samplePosition >= 0 && samplePosition < _inputSpectrum.Length);
         return equivalenceResistance * _inputSpectrum[samplePosition] / (_outputSpectrum[samplePosition] - _inputSpectrum[samplePosition]);
     }
 
-    private float ComputeCapacitance(int samplePosition)
+    public float ComputeCapacitance(int samplePosition)
     {
         Assert.IsTrue(samplePosition >= 0 && samplePosition < _inputSpectrum.Length);
         
@@ -51,5 +41,15 @@ public sealed class ImpedanceComputer : MonoBehaviour
         float angularFrequency = 2f * Mathf.PI * waveformGenerator.WaveFrequency;
         
         return (1f + tanImpedancePhase * tanImpedancePhase) / Mathf.Pow(impedanceMagnitude * angularFrequency * tanImpedancePhase, 2);
+    }
+    
+    private void OnWaveformSamplesChunkReady(float[] samplesChunk)
+    {
+        _outputSpectrum = FFT.ForwardTransform(ComplexDouble.FloatToComplex(samplesChunk));
+    }
+    
+    private void OnMicrophoneListenerSamplesChunkReady(float[] samplesChunk)
+    {
+        _inputSpectrum = FFT.ForwardTransform(ComplexDouble.FloatToComplex(samplesChunk));
     }
 }
