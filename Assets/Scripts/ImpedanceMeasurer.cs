@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 [DisallowMultipleComponent]
 public sealed class ImpedanceMeasurer : MonoBehaviour
@@ -9,24 +10,23 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
 
     public event Action OnImpedanceMeasuringStarted = delegate { };
     public event Action OnImpedanceMeasuringFinished = delegate { };
-    public event Action<ComplexDouble, float> OnImpedanceMeasured = delegate { };
+    public event Action<float, float> OnImpedanceMeasured = delegate { };
 
-        [Header("Dependencies")]
-    [SerializeField] private WaveformGenerator waveformGenerator;
-    [SerializeField] private MicrophoneListener microphoneListener;
-    [SerializeField] private ImpedanceComputer impedanceComputer;
+    [Header("Dependencies")]
+    [SerializeField] private GeneralSettings generalSettings;
+    [SerializeField] private ChannelsCalibrator channelsCalibrator;
 
     [Header("Settings")]
+    [SerializeField, Range(1, 20)] private int iterationsNumber = 10;
     [SerializeField, Min(0f)] private float lowCutOffFrequency = 20f;
     [SerializeField, Min(0f)] private float highCutOffFrequency = 2000f;
     [SerializeField] private FrequencyIncrement frequencyIncrement = FrequencyIncrement.OneTwentyFourthOctave;
-    [SerializeField] private SamplingRatePreset samplingRate = SamplingRatePreset.AudioCD;
 
-    [Space]
-    [SerializeField, Range(10f, 1000f)] private float transientTimeInMs = 100f;
-
-    private float _octaveScaler = 0f;
+    private float _octaveScaler;
     private Coroutine _measuringProcessCoroutine;
+    
+    private OutputDeviceGenerator _outputDeviceGenerator;
+    private InputDeviceListener _inputDeviceListener;
 
     [field: Header("Debug Info"), SerializeField]
     private float CurrentFrequency { get; set; }
@@ -47,11 +47,20 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        _outputDeviceGenerator = OutputDeviceGenerator.Instance;
+        _inputDeviceListener = InputDeviceListener.Instance;
+
+        Assert.IsNotNull(_outputDeviceGenerator);
+        Assert.IsNotNull(_inputDeviceListener);
+    }
+
     public void StartMeasuring()
     {
         StopMeasuring();
         
-        _measuringProcessCoroutine = StartCoroutine(StartMeasureProcess());
+        _measuringProcessCoroutine = StartCoroutine(MeasuringCoroutine());
         OnImpedanceMeasuringStarted.Invoke();
     }
 
@@ -64,7 +73,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
         }
     }
 
-    private IEnumerator StartMeasureProcess()
+    private IEnumerator MeasuringCoroutine()
     {
         float previousFrequency;
         CurrentFrequency = lowCutOffFrequency;
@@ -74,19 +83,45 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
         {
             previousFrequency = CurrentFrequency;
             
-            if (waveformGenerator.IsGenerating && microphoneListener.IsListening)
+            _outputDeviceGenerator.StartGeneration(
+                generalSettings.OutputDeviceIndex,
+                CurrentFrequency,
+                generalSettings.SampleRate
+            );
+            _inputDeviceListener.StartListening(
+                generalSettings.InputDeviceIndex,
+                generalSettings.InputOutputChannelOffsets
+            );
+            
+            yield return new WaitForSecondsRealtime(generalSettings.TransientTimeInMs.ConvertToNormal(fromMetric: Metric.Milli));
+            
+            float impedanceMagnitude = 0f;
+            for (int i = 0; i < iterationsNumber;)
             {
-                StopGenerationAndListening();
+                float computedImpedanceMagnitude = ZRLCHelper.ComputeImpedanceMagnitude(
+                    _inputDeviceListener.InputFilledDataSamples,
+                    _inputDeviceListener.OutputFilledDataSamples,
+                    generalSettings.EquivalenceResistance,
+                    channelsCalibrator.CalibrationRatioRms
+                );
+
+                if (float.IsNaN(computedImpedanceMagnitude))
+                {
+                    yield return null;
+                    continue;
+                }
+
+                impedanceMagnitude += computedImpedanceMagnitude;
+                i++;
+                
+                yield return null;
             }
+            impedanceMagnitude /= iterationsNumber;
 
-            waveformGenerator.StartGeneration(CurrentFrequency, samplingRate);
-            microphoneListener.StartListening(samplingRate);
-
-            yield return new WaitForSecondsRealtime(transientTimeInMs / 1000f);
-
-            ComplexDouble impedance = impedanceComputer.ComputeImpedance(0);
-            Debug.Log($"|Z| = {impedance.Magnitude}");
-            OnImpedanceMeasured.Invoke(impedance, CurrentFrequency);
+            Debug.Log($"<color=green>|Z| = {impedanceMagnitude}</color> | <color=red>phase: -</color>");
+            OnImpedanceMeasured.Invoke(impedanceMagnitude, CurrentFrequency);
+            
+            StopGenerationAndListening();
             
             CurrentFrequency += CurrentFrequency * _octaveScaler;
         }
@@ -100,7 +135,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
 
     private void StopGenerationAndListening()
     {
-        waveformGenerator.StopGeneration();
-        microphoneListener.StopListening();
+        _outputDeviceGenerator.StopGeneration();
+        _inputDeviceListener.StopListening();
     }
 }

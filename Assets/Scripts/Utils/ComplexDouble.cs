@@ -34,17 +34,24 @@ public struct ComplexDouble
         return complexData;
     }
 
-    public static ComplexDouble[] FloatToComplex(float[] data)
+    public static ComplexDouble[] FloatToComplex(float[] data, int length)
     {
-        var complexData = new ComplexDouble[data.Length];
-
+        var complexData = new ComplexDouble[length];
+        
         for (int i = 0; i < data.Length; i++)
         {
-            complexData[i] = new ComplexDouble(data[i], 0f);
+            complexData[i] = new ComplexDouble(data[i], 0d);
+        }
+
+        for (int i = data.Length; i < length; i++)
+        {
+            complexData[i] = new ComplexDouble(0d, 0d);
         }
 
         return complexData;
     }
+
+    public static ComplexDouble[] FloatToComplex(float[] data) => FloatToComplex(data, data.Length);
 
     public static ComplexDouble operator +(ComplexDouble a, ComplexDouble b) => new(a.real + b.real, a.img + b.img);
     

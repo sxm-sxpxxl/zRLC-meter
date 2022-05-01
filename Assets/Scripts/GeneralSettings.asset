@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31e932e9d88e4ff1b38b457461eba81a, type: 3}
+  m_Name: GeneralSettings
+  m_EditorClassIdentifier: 
+  inputDeviceIndex: 0
+  outputDeviceIndex: 2
+  outputDeviceVolume: 1
+  sampleRate: 44100
+  inputChannelReferencePoint: 0
+  equivalenceResistance: 100
+  transientTimeInMs: 300
