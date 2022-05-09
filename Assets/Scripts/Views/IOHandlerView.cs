@@ -41,6 +41,13 @@ public sealed class IOHandlerView : MonoBehaviour
         
         inputReferencePointDropdown.onValueChanged.AddListener(SetInputReferencePoint);
     }
+    
+    private void OnDestroy()
+    {
+        outputDeviceDropdown.onValueChanged.RemoveListener(SetOutputDevice);
+        outputVolumeDropdown.onValueChanged.RemoveListener(SetOutputDeviceVolume);
+        inputDeviceDropdown.onValueChanged.RemoveListener(SetInputDevice);
+    }
 
     private void CreateOutputVolumeOptionsFor(Dropdown volumeDropdown)
     {
@@ -53,13 +60,6 @@ public sealed class IOHandlerView : MonoBehaviour
             .ToList();
         
         volumeDropdown.RefreshShownValue();
-    }
-
-    private void OnDestroy()
-    {
-        outputDeviceDropdown.onValueChanged.RemoveListener(SetOutputDevice);
-        outputVolumeDropdown.onValueChanged.RemoveListener(SetOutputDeviceVolume);
-        inputDeviceDropdown.onValueChanged.RemoveListener(SetInputDevice);
     }
 
     private void SetOutputDevice(int deviceIndex)
