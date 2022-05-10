@@ -11,7 +11,8 @@ public sealed class InputDeviceListener : SingletonBehaviour<InputDeviceListener
     
     public ReadOnlySpan<float> InputFilledDataSamples => _inputDataSamples.GetSubArray(0, _dataFilledCount).GetReadOnlySpan();
     public ReadOnlySpan<float> OutputFilledDataSamples => _outputDataSamples.GetSubArray(0, _dataFilledCount).GetReadOnlySpan();
-
+    public int SampleRate => _stream.SampleRate;
+    
     private bool IsListening => _stream != null;
 
     protected override void Init()

@@ -17,7 +17,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
     [SerializeField] private ChannelsCalibrator channelsCalibrator;
 
     [Header("Settings")]
-    [SerializeField, Range(1, 20)] private int iterationsNumber = 10;
+    [SerializeField, Range(1, 100)] private int iterationsNumber = 10;
     [SerializeField, Min(0f)] private float lowCutOffFrequency = 20f;
     [SerializeField, Min(0f)] private float highCutOffFrequency = 2000f;
     [SerializeField] private FrequencyIncrement frequencyIncrement = FrequencyIncrement.OneTwentyFourthOctave;
@@ -95,14 +95,22 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             
             yield return new WaitForSecondsRealtime(generalSettings.TransientTimeInMs.ConvertToNormal(fromMetric: Metric.Milli));
             
-            float impedanceMagnitude = 0f;
+            float impedanceMagnitude = 0f, impedancePhaseInDeg = 0f;
             for (int i = 0; i < iterationsNumber;)
             {
                 float computedImpedanceMagnitude = ZRLCHelper.ComputeImpedanceMagnitude(
                     _inputDeviceListener.InputFilledDataSamples,
                     _inputDeviceListener.OutputFilledDataSamples,
                     generalSettings.EquivalenceResistance,
-                    channelsCalibrator.CalibrationRatioRms
+                    channelsCalibrator.CalibrationMagnitudeRatioRms
+                );
+                
+                float computedImpedancePhaseInDeg = ZRLCHelper.ComputeImpedancePhaseInDeg(
+                    _inputDeviceListener.InputFilledDataSamples,
+                    _inputDeviceListener.OutputFilledDataSamples,
+                    _inputDeviceListener.SampleRate,
+                    CurrentFrequency,
+                    channelsCalibrator.CalibrationMagnitudeRatioRms
                 );
 
                 if (float.IsNaN(computedImpedanceMagnitude))
@@ -112,13 +120,17 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                 }
 
                 impedanceMagnitude += computedImpedanceMagnitude;
+                impedancePhaseInDeg += computedImpedancePhaseInDeg;
                 i++;
                 
                 yield return null;
             }
             impedanceMagnitude /= iterationsNumber;
+            impedancePhaseInDeg /= iterationsNumber;
 
-            Debug.Log($"<color=green>|Z| = {impedanceMagnitude}</color> | <color=red>phase: -</color>");
+            Debug.Log($">> <color=blue>frequency = {CurrentFrequency} Hz</color> | <color=green>|Z| = {impedanceMagnitude}</color> | <color=red>phase: {impedancePhaseInDeg}°</color>");
+            Debug.Log("**********************************************");
+
             OnImpedanceMeasured.Invoke(impedanceMagnitude, CurrentFrequency);
             
             StopGenerationAndListening();
