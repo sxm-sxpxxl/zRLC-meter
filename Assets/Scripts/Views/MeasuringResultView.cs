@@ -23,12 +23,19 @@ public sealed class MeasuringResultView : MonoBehaviour
         impedanceChartFeedView.OnImpedanceSelected -= OnImpedanceSelected;
     }
 
-    private void OnImpedanceSelected(float impedanceMagnitude, float frequency)
+    private void OnImpedanceSelected(ImpedanceMeasureData data)
     {
-        SetParameterValueText(frequencyValueText, frequency, "Hz");
-        // TODO: implement it
-        // SetParameterValueText(activeResistanceValueText, impedanceComputer.ComputeActiveResistanceWithCapacitance(impedanceMagnitude, frequency), "Ohm");
-        // SetParameterValueText(capacitanceValueText, impedanceComputer.ComputeCapacitance(impedanceMagnitude, frequency), "F");
+        SetParameterValueText(frequencyValueText, data.frequency, "Hz");
+        SetParameterValueText(
+            activeResistanceValueText,
+            ZRLCHelper.ComputeActiveResistanceWithCapacitance(data.magnitude, data.phaseInDeg, data.frequency),
+            "Ohm"
+        );
+        SetParameterValueText(
+            capacitanceValueText,
+            ZRLCHelper.ComputeCapacitance(data.magnitude, data.phaseInDeg, data.frequency),
+            "F"
+        );
     }
 
     private void SetParameterValueText(Text target, float value, string units)

@@ -10,7 +10,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
 
     public event Action OnImpedanceMeasuringStarted = delegate { };
     public event Action OnImpedanceMeasuringFinished = delegate { };
-    public event Action<float, float> OnImpedanceMeasured = delegate { };
+    public event Action<ImpedanceMeasureData> OnImpedanceMeasured = delegate { };
 
     [Header("Dependencies")]
     [SerializeField] private GeneralSettings generalSettings;
@@ -113,7 +113,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                     channelsCalibrator.CalibrationMagnitudeRatioRms
                 );
 
-                if (float.IsNaN(computedImpedanceMagnitude))
+                if (float.IsNaN(computedImpedanceMagnitude) || float.IsNaN(computedImpedancePhaseInDeg))
                 {
                     yield return null;
                     continue;
@@ -128,10 +128,16 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             impedanceMagnitude /= iterationsNumber;
             impedancePhaseInDeg /= iterationsNumber;
 
-            Debug.Log($">> <color=blue>frequency = {CurrentFrequency} Hz</color> | <color=green>|Z| = {impedanceMagnitude}</color> | <color=red>phase: {impedancePhaseInDeg}°</color>");
-            Debug.Log("**********************************************");
+            Debug.Log($"f: <color=yellow>{CurrentFrequency} Hz</color>  " +
+                      $"|Z|: <color=green>{impedanceMagnitude} Ohm</color>  " +
+                      $"φ: <color=red>{impedancePhaseInDeg}°</color>");
 
-            OnImpedanceMeasured.Invoke(impedanceMagnitude, CurrentFrequency);
+            OnImpedanceMeasured.Invoke(new ImpedanceMeasureData
+            {
+                magnitude = impedanceMagnitude,
+                phaseInDeg = impedancePhaseInDeg,
+                frequency = CurrentFrequency
+            });
             
             StopGenerationAndListening();
             

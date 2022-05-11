@@ -15,10 +15,8 @@ public sealed class ChannelsCalibrator : MonoBehaviour
     [SerializeField, Min(0f)] private float calibrationFrequency = 500f;
 
     private float? _calibrationMagnitudeRatioRms = null;
-    private float? _calibrationPhaseShiftInDeg = null;
 
     public float CalibrationMagnitudeRatioRms => _calibrationMagnitudeRatioRms ?? 1f;
-    public float CalibrationPhaseShiftInDeg => _calibrationPhaseShiftInDeg ?? 0f;
 
     public void Calibrate()
     {
@@ -35,7 +33,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(generalSettings.TransientTimeInMs.ConvertToNormal(fromMetric: Metric.Milli));
         
-        _calibrationMagnitudeRatioRms = _calibrationPhaseShiftInDeg = 0f;
+        _calibrationMagnitudeRatioRms = 0f;
         float channelDifferenceLevel = 0f;
         
         for (int i = 0; i < iterationNumber;)
@@ -52,13 +50,6 @@ public sealed class ChannelsCalibrator : MonoBehaviour
             Debug.Log($"<color=yellow>[it: {i}]</color> Input.Rms: {inputRms} V | Output.Rms: {outputRms} V");
             
             _calibrationMagnitudeRatioRms += outputRms / inputRms;
-            _calibrationPhaseShiftInDeg += ZRLCHelper.ComputePhaseShift(
-                inputDeviceListener.InputFilledDataSamples,
-                inputDeviceListener.OutputFilledDataSamples,
-                inputDeviceListener.SampleRate,
-                calibrationFrequency,
-                outputRms / inputRms
-            );
             channelDifferenceLevel += outputRms.Level() - inputRms.Level();
             i++;
             
@@ -66,11 +57,10 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         }
         
         _calibrationMagnitudeRatioRms = Mathf.Abs(_calibrationMagnitudeRatioRms.Value / iterationNumber);
-        _calibrationPhaseShiftInDeg = _calibrationPhaseShiftInDeg.Value / iterationNumber;
-        Debug.Log($"Calibration <color=yellow>magnitude RMS</color>: {_calibrationMagnitudeRatioRms.Value} V | Calibration <color=yellow>phase</color>: {_calibrationPhaseShiftInDeg}°");
+        Debug.Log($"Calibration <color=yellow>Magnitude RMS</color>: {_calibrationMagnitudeRatioRms.Value} V");
         
         channelDifferenceLevel = Mathf.Abs(channelDifferenceLevel / iterationNumber);
-        Debug.Log($"Channel difference <color=green>Level</color>: {channelDifferenceLevel} dBFS");
+        Debug.Log($"Channel <color=yellow>Difference Level</color>: {channelDifferenceLevel} dBFS");
         
         OnCalibrationFinished.Invoke(channelDifferenceLevel);
         

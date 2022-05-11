@@ -6,6 +6,30 @@ public static class SignalProcessingExtensions
     // Full scale sin wave = 0 dBFS : refLevel = 1 / sqrt(2)
     const float DefaultRefLevel = 0.7071f;
     const float LevelZeroOffset = 1.5849e-13f;
+
+    /// <summary>
+    /// Return peak value of float span values.
+    /// </summary>
+    /// <param name="values">The float span values.</param>
+    /// <returns></returns>
+    public static float Peak(this ReadOnlySpan<float> values)
+    {
+        if (values.Length == 0)
+        {
+            return 0.0f;            
+        }
+        
+        float maxValue = values[0];
+        for (int i = 1; i < values.Length; i++)
+        {
+            if (values[i] > maxValue)
+            {
+                maxValue = values[i];
+            }
+        }
+        
+        return maxValue;
+    }
     
     /// <summary>
     /// Return root mean square value of float span values.

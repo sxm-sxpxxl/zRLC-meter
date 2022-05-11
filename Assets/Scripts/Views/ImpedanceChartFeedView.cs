@@ -5,13 +5,19 @@ using ChartAndGraph;
 
 public sealed class ImpedanceChartFeedView : MonoBehaviour
 {
-    public event Action<float, float> OnImpedanceSelected = delegate { };
+    public event Action<ImpedanceMeasureData> OnImpedanceSelected = delegate { };
 
-    [SerializeField] private GraphChartBase graph;
+    [Header("Dependencies")]
     [SerializeField] private ImpedanceMeasurer impedanceMeasurer;
-    [SerializeField] private string chartCategoryName = "Player 1";
+    
+    [Header("Settings")]
+    [SerializeField] private GraphChartBase magnitudeGraph;
+    [SerializeField] private string magnitudeChartCategoryName = "ImpedanceMagnitude";
+    [Space]
+    [SerializeField] private GraphChartBase phaseGraph;
+    [SerializeField] private string phaseChartCategoryName = "ImpedancePhase";
 
-    private readonly List<float> _measuredImpedanceMagnitudes = new List<float>(capacity: 1000);
+    private readonly List<ImpedanceMeasureData> _measuredImpedanceMagnitudes = new List<ImpedanceMeasureData>(capacity: 1000);
 
     private void Awake()
     {
@@ -27,18 +33,22 @@ public sealed class ImpedanceChartFeedView : MonoBehaviour
     
     public void OnChartPointClicked(GraphChartBase.GraphEventArgs graphEventArgs)
     {
-        OnImpedanceSelected.Invoke(_measuredImpedanceMagnitudes[graphEventArgs.Index], (float) graphEventArgs.Value.x);
+        ImpedanceMeasureData data = _measuredImpedanceMagnitudes[graphEventArgs.Index];
+        OnImpedanceSelected.Invoke(data);
     }
 
-    private void AddImpedanceMeasureToChart(float impedanceMagnitude, float frequency)
+    private void AddImpedanceMeasureToChart(ImpedanceMeasureData data)
     {
-        _measuredImpedanceMagnitudes.Add(impedanceMagnitude);
-        graph.DataSource.AddPointToCategoryRealtime(chartCategoryName, x: frequency, y: impedanceMagnitude);
+        _measuredImpedanceMagnitudes.Add(data);
+        
+        magnitudeGraph.DataSource.AddPointToCategoryRealtime(magnitudeChartCategoryName, x: data.frequency, y: data.magnitude);
+        phaseGraph.DataSource.AddPointToCategoryRealtime(phaseChartCategoryName, x: data.frequency, y: data.phaseInDeg);
     }
 
     private void ClearChartData()
     {
         _measuredImpedanceMagnitudes.Clear();
-        graph.DataSource.ClearCategory(chartCategoryName);
+        magnitudeGraph.DataSource.ClearCategory(magnitudeChartCategoryName);
+        phaseGraph.DataSource.ClearCategory(phaseChartCategoryName);
     }
 }
