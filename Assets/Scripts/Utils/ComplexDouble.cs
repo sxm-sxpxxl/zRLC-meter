@@ -2,6 +2,10 @@
 using System.Diagnostics;
 using UnityEngine;
 
+/// <summary>
+/// Представление комплексного числа с реализацией базовых операций над комплексными числами.
+/// Использовалось в связке с FFT/DFT, теперь уже не требуется - потом уберу, если так и не понадобится.
+/// </summary>
 [DebuggerDisplay("{real} + {img}i")]
 public struct ComplexDouble
 {

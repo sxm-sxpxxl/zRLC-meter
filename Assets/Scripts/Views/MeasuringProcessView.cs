@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Обрабатывает нажатия на кнопки запуска и остановки процесса измерения.
+/// </summary>
 [DisallowMultipleComponent]
 public sealed class MeasuringProcessView : MonoBehaviour
 {

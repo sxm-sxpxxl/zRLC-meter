@@ -2,6 +2,10 @@ using System;
 using UnityEngine;
 using SoundIO.SimpleDriver;
 
+/// <summary>
+/// Устанавливает соединение с выходным аудио-устройством по запросу и продолжает генерировать на выход семплы
+/// синусоидального сигнала с параметрами заданными в основных настройках, пока не поступит запрос о прекращении генерации.
+/// </summary>
 public sealed class OutputDeviceGenerator : SingletonBehaviour<OutputDeviceGenerator>
 {
     [SerializeField] private GeneralSettings generalSettings;

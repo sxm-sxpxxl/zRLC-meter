@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Отслеживает нажатия на точки графиков амплитуды и фазы импеданса и для соответствующего импеданса рассчитывает и отображает RLC параметры.
+/// </summary>
 [DisallowMultipleComponent]
 public sealed class MeasuringResultView : MonoBehaviour
 {
@@ -26,21 +29,13 @@ public sealed class MeasuringResultView : MonoBehaviour
     private void OnImpedanceSelected(ImpedanceMeasureData data)
     {
         SetParameterValueText(frequencyValueText, data.frequency, "Hz");
-        SetParameterValueText(
-            activeResistanceValueText,
-            ZRLCHelper.ComputeActiveResistanceWithCapacitance(data.magnitude, data.phaseInDeg, data.frequency),
-            "Ohm"
-        );
-        SetParameterValueText(
-            capacitanceValueText,
-            ZRLCHelper.ComputeCapacitance(data.magnitude, data.phaseInDeg, data.frequency),
-            "F"
-        );
+        SetParameterValueText(activeResistanceValueText, ZRLCHelper.ComputeActiveResistanceWithCapacitance(data), "Ohm");
+        SetParameterValueText(capacitanceValueText, ZRLCHelper.ComputeCapacitance(data), "F");
     }
 
     private void SetParameterValueText(Text target, float value, string units)
     {
-        (float convertedValue, string prefix) = value.PrefixConvertedValue();
+        (float convertedValue, string prefix) = value.AutoConvertNormalValue();
         target.text = $"{convertedValue:N} {prefix}{units}";
     }
 }

@@ -5,6 +5,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using DeviceType = SoundIO.SimpleDriver.DeviceType;
 
+/// <summary>
+/// Обрабатывает UI элементы, настраивающие аудио-устройства ввода-вывода.
+/// </summary>
 [DisallowMultipleComponent]
 public sealed class IOHandlerView : MonoBehaviour
 {

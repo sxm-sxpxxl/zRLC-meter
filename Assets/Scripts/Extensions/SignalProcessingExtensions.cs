@@ -1,6 +1,9 @@
 ﻿using System;
 using UnityEngine;
 
+/// <summary>
+/// Расширения для обработки дискретных сигналов.
+/// </summary>
 public static class SignalProcessingExtensions
 {
     // Full scale sin wave = 0 dBFS : refLevel = 1 / sqrt(2)
@@ -8,9 +11,10 @@ public static class SignalProcessingExtensions
     const float LevelZeroOffset = 1.5849e-13f;
 
     /// <summary>
-    /// Return peak value of float span values.
+    /// Возвращает пиковое (или просто максимальное) значение для переданного сигнала.
+    /// Отражает амплитуду переданного сигнала.
     /// </summary>
-    /// <param name="values">The float span values.</param>
+    /// <param name="values">Сигнал.</param>
     /// <returns></returns>
     public static float Peak(this ReadOnlySpan<float> values)
     {
@@ -32,9 +36,9 @@ public static class SignalProcessingExtensions
     }
     
     /// <summary>
-    /// Return root mean square value of float span values.
+    /// Возвращает среднеквадратичное значение переданного сигнала.
     /// </summary>
-    /// <param name="values">The float span values.</param>
+    /// <param name="values">Сигнал.</param>
     /// <returns></returns>
     public static float Rms(this ReadOnlySpan<float> values)
     {
@@ -49,19 +53,19 @@ public static class SignalProcessingExtensions
     }
 
     /// <summary>
-    /// Return RMS value in dBFS.
+    /// Возвращает среднеквадратичное значение в относительном логарифмическом масштабе dBFS (dB relative to full scale).
     /// </summary>
-    /// <param name="rmsValue">The root mean square value.</param>
-    /// <param name="refLevel">The reference RMS level is assumed to be 0 dBFS.</param>
+    /// <param name="rmsValue">Среднеквадратичное значение.</param>
+    /// <param name="refLevel">Опорное значение, определяющее значение rms, которому будет соответствовать уровень 0 dBFS.</param>
     /// <returns></returns>
     public static float Level(this float rmsValue, float refLevel = DefaultRefLevel) =>
         20f * Mathf.Log10(rmsValue / refLevel + LevelZeroOffset);
 
     /// <summary>
-    /// Return inversed level value from dBFS.
+    /// Возвращает среднеквадратичное значение из его логарифмического представления.
     /// </summary>
-    /// <param name="levelValue">The level value in dBFS.</param>
-    /// <param name="refLevel">The reference RMS level is assumed to 0 dBFS.</param>
+    /// <param name="levelValue">Среднеквадратичное значение в относительном логарифмическом масштабе dBFS.</param>
+    /// <param name="refLevel">Опорное значение, определяющее значение rms, которому будет соответствовать уровень 0 dBFS.</param>
     /// <returns></returns>
     public static float InverseLevel(this float levelValue, float refLevel = DefaultRefLevel) =>
         Mathf.Pow(10f, levelValue / 20f) * refLevel - LevelZeroOffset;

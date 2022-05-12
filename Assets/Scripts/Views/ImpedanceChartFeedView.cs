@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using ChartAndGraph;
 
+/// <summary>
+/// Отслеживает процесс измерений и заполняет графики значениями амплитуды и фазы импеданса по мере завершения измерений.
+/// </summary>
 public sealed class ImpedanceChartFeedView : MonoBehaviour
 {
     public event Action<ImpedanceMeasureData> OnImpedanceSelected = delegate { };

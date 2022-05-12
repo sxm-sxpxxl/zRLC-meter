@@ -14,6 +14,9 @@ public enum ReferencePoint
     Right = 1
 }
 
+/// <summary>
+/// Представляет основные настройки программы, доступные для чтения/записи различным компонентам.
+/// </summary>
 [CreateAssetMenu(fileName = "NewGeneralSettings", menuName = "ZRLCMeter/GeneralSettings", order = 0)]
 public sealed class GeneralSettings : ScriptableObject
 {

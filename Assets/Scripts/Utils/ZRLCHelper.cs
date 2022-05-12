@@ -3,8 +3,19 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Рассчитывает импеданс (амплитуду и фазу) и RLC параметры импеданса.
+/// </summary>
 public static class ZRLCHelper
 {
+    /// <summary>
+    /// Рассчитать амплитуду импеданса.
+    /// </summary>
+    /// <param name="inputSignalSamples">Входной сигнал.</param>
+    /// <param name="outputSignalSamples">Выходной сигнал.</param>
+    /// <param name="equivalenceResistance">Эквивалентное сопротивление.</param>
+    /// <param name="calibrationMagnitudeRatioRms">Отношение между сигналами при калибровке.</param>
+    /// <returns></returns>
     public static float ComputeImpedanceMagnitude(
         ReadOnlySpan<float> inputSignalSamples,
         ReadOnlySpan<float> outputSignalSamples,
@@ -21,6 +32,15 @@ public static class ZRLCHelper
         return impedanceMagnitude;
     }
 
+    /// <summary>
+    /// Рассчитать фазу импеданса.
+    /// </summary>
+    /// <param name="inputSignalSamples">Входной сигнал.</param>
+    /// <param name="outputSignalSamples">Выходной сигнал.</param>
+    /// <param name="sampleRate">Частота дискретизации.</param>
+    /// <param name="frequency">Частота генерируемой синусоиды.</param>
+    /// <param name="calibrationMagnitudeRatioRms">Отношение между сигналами при калибровке.</param>
+    /// <returns></returns>
     public static float ComputeImpedancePhaseInDeg(
         ReadOnlySpan<float> inputSignalSamples,
         ReadOnlySpan<float> outputSignalSamples,
@@ -46,40 +66,62 @@ public static class ZRLCHelper
         return phaseInDeg;
     }
 
-    public static float ComputeActiveResistanceWithCapacitance(float impedanceMagnitude, float impedancePhaseInDeg, float frequency)
+    /// <summary>
+    /// Рассчитать активное сопротивление в контуре RC.
+    /// </summary>
+    /// <param name="data">Результат измерения импеданса.</param>
+    /// <returns></returns>
+    public static float ComputeActiveResistanceWithCapacitance(ImpedanceMeasureData data)
     {
-        float angularFrequency = GetAngularFrequencyFor(frequency);
-        float capacitance = ComputeCapacitance(impedanceMagnitude, impedancePhaseInDeg, frequency);
+        float angularFrequency = GetAngularFrequencyFor(data.frequency);
+        float capacitance = ComputeCapacitance(data);
         
-        return Mathf.Sqrt(Mathf.Abs(impedanceMagnitude * impedanceMagnitude - 1f / Mathf.Pow(angularFrequency * capacitance, 2)));
+        return Mathf.Sqrt(Mathf.Abs(data.magnitude * data.magnitude - 1f / Mathf.Pow(angularFrequency * capacitance, 2)));
     }
     
-    public static float ComputeActiveResistanceWithInductance(float impedanceMagnitude, float impedancePhaseInDeg, float frequency)
+    /// <summary>
+    /// Рассчитать активное сопротивление в контуре RL.
+    /// </summary>
+    /// <param name="data">Результат измерения импеданса.</param>
+    /// <returns></returns>
+    public static float ComputeActiveResistanceWithInductance(ImpedanceMeasureData data)
     {
-        float angularFrequency = GetAngularFrequencyFor(frequency);
-        float inductance = ComputeInductance(impedanceMagnitude, impedancePhaseInDeg, frequency);
+        float angularFrequency = GetAngularFrequencyFor(data.frequency);
+        float inductance = ComputeInductance(data);
         
-        return Mathf.Sqrt(impedanceMagnitude * impedanceMagnitude - Mathf.Pow(angularFrequency * inductance, 2));
+        return Mathf.Sqrt(data.magnitude * data.magnitude - Mathf.Pow(angularFrequency * inductance, 2));
     }
     
-    public static float ComputeCapacitance(float impedanceMagnitude, float impedancePhaseInDeg, float frequency)
+    /// <summary>
+    /// Рассчитать емкость в контуре RC.
+    /// </summary>
+    /// <param name="data">Результат измерения импеданса.</param>
+    /// <returns></returns>
+    public static float ComputeCapacitance(ImpedanceMeasureData data)
     {
-        float angularFrequency = GetAngularFrequencyFor(frequency);
+        float angularFrequency = GetAngularFrequencyFor(data.frequency);
         
-        float clampedPhaseInDeg = Mathf.Clamp(impedancePhaseInDeg, -89.9f, 89.9f);
+        float clampedPhaseInDeg = Mathf.Clamp(data.phaseInDeg, -89.9f, 89.9f);
         float tanImpedancePhase = Mathf.Tan(clampedPhaseInDeg * Mathf.Deg2Rad);
 
-        return Mathf.Sqrt(Mathf.Abs(tanImpedancePhase * tanImpedancePhase - 1f)) / (angularFrequency * Mathf.Max(Mathf.Abs(tanImpedancePhase), 0.01f) * impedanceMagnitude);
+        return Mathf.Sqrt(Mathf.Abs(tanImpedancePhase * tanImpedancePhase - 1f)) /
+               (angularFrequency * Mathf.Max(Mathf.Abs(tanImpedancePhase), 0.01f) * data.magnitude);
     }
 
-    public static float ComputeInductance(float impedanceMagnitude, float impedancePhaseInDeg, float frequency)
+    /// <summary>
+    /// Рассчитать индуктивность в контуре RL.
+    /// </summary>
+    /// <param name="data">Результат измерения импеданса.</param>
+    /// <returns></returns>
+    public static float ComputeInductance(ImpedanceMeasureData data)
     {
-        float angularFrequency = GetAngularFrequencyFor(frequency);
+        float angularFrequency = GetAngularFrequencyFor(data.frequency);
         
-        float clampedPhaseInDeg = Mathf.Clamp(impedancePhaseInDeg, -89.9f, 89.9f);
+        float clampedPhaseInDeg = Mathf.Clamp(data.phaseInDeg, -89.9f, 89.9f);
         float tanImpedancePhase = Mathf.Tan(clampedPhaseInDeg * Mathf.Deg2Rad);
         
-        return impedanceMagnitude * tanImpedancePhase / (angularFrequency * Mathf.Sqrt(1f + tanImpedancePhase * tanImpedancePhase));
+        return data.magnitude * tanImpedancePhase /
+               (angularFrequency * Mathf.Sqrt(1f + tanImpedancePhase * tanImpedancePhase));
     }
 
     private static float GetAngularFrequencyFor(float frequency) => 2f * Mathf.PI * frequency;

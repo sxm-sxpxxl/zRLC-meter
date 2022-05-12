@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.Assertions;
 
+/// <summary>
+/// Реализация прямого и обратного быстрых преобразований Фурье. 
+/// </summary>
 public static class FFT
 {
     public static ComplexDouble[] ForwardTransform(ComplexDouble[] samples) => Transform(samples, isForward: true);

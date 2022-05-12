@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Реализация прямого и обратного преобразований Фурье напрямую (временная сложность O(n^2), что не есть быстро, поэтому используется FFT).
+/// </summary>
 public static class DFT
 {
     public static ComplexDouble[] ForwardTransform(ComplexDouble[] samples) => Transform(samples, isForward: true);

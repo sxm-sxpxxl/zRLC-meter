@@ -3,6 +3,12 @@ using UnityEngine;
 using SoundIO.SimpleDriver;
 using Unity.Collections;
 
+/// <summary>
+/// Устанавливает соединение с входным аудио-устройством по запросу и продолжает слушать и собирать данные со входа,
+/// пока не поступит запрос о прекращения прослушивания.
+/// 
+/// ! Взаимодействует с API аудио-библиотеки libsoundio !
+/// </summary>
 public sealed class InputDeviceListener : SingletonBehaviour<InputDeviceListener>
 {
     private InputStream _stream;

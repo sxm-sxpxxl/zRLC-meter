@@ -3,6 +3,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Assertions;
 
+/// <summary>
+/// Проводит процесс измерений в диапазоне частот [lowCutOffFreq, highCutOffFreq] и уведомляет о ходе процесса подписчиков.
+/// </summary>
 [DisallowMultipleComponent]
 public sealed class ImpedanceMeasurer : MonoBehaviour
 {

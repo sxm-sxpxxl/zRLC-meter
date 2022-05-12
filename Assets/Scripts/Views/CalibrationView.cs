@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Обрабатывает нажатие на кнопку Calibrate и отображает результат калибровки в текстовом поле.
+/// </summary>
 [DisallowMultipleComponent]
 public sealed class CalibrationView : MonoBehaviour
 {

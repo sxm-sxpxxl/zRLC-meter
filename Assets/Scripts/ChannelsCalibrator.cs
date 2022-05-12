@@ -2,6 +2,9 @@
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Отвечает за калибровку левого и правого каналов входного порта Line In.
+/// </summary>
 [DisallowMultipleComponent]
 public sealed class ChannelsCalibrator : MonoBehaviour
 {
