@@ -30,6 +30,8 @@ public sealed class GeneralSettings : ScriptableObject
     [SerializeField] private ReferencePoint inputChannelReferencePoint = ReferencePoint.Left;
     [SerializeField, Min(0f)] private float equivalenceResistance = 100f;
     [SerializeField, Range(10f, 1000f)] private float transientTimeInMs = 100f;
+    [SerializeField, Min(0f)] private float lowCutOffFrequency = 200f;
+    [SerializeField, Min(0f)] private float highCutOffFrequency = 1000f;
 
     public int InputDeviceIndex
     {
@@ -76,5 +78,17 @@ public sealed class GeneralSettings : ScriptableObject
     {
         get => transientTimeInMs;
         set => transientTimeInMs = Mathf.Clamp(value, 10f, 1000f);
+    }
+
+    public float LowCutOffFrequency
+    {
+        get => lowCutOffFrequency;
+        set => lowCutOffFrequency = Mathf.Max(value, 0f);
+    }
+
+    public float HighCutOffFrequency
+    {
+        get => highCutOffFrequency;
+        set => highCutOffFrequency = Mathf.Max(value, 0f);
     }
 }

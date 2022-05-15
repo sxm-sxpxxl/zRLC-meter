@@ -21,8 +21,6 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField, Range(1, 100)] private int iterationsNumber = 10;
-    [SerializeField, Min(0f)] private float lowCutOffFrequency = 20f;
-    [SerializeField, Min(0f)] private float highCutOffFrequency = 2000f;
     [SerializeField] private FrequencyIncrement frequencyIncrement = FrequencyIncrement.OneTwentyFourthOctave;
 
     private float _octaveScaler;
@@ -42,14 +40,6 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
         OneFortyEighthOctave = 48
     }
     
-    private void OnValidate()
-    {
-        if (lowCutOffFrequency > highCutOffFrequency)
-        {
-            Debug.LogError("Low cut-off frequency is smaller than High cut-off frequency!");
-        }
-    }
-
     private void Start()
     {
         _outputDeviceGenerator = OutputDeviceGenerator.Instance;
@@ -79,7 +69,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
     private IEnumerator MeasuringCoroutine()
     {
         float previousFrequency;
-        CurrentFrequency = lowCutOffFrequency;
+        CurrentFrequency = generalSettings.LowCutOffFrequency;
         _octaveScaler = OctaveFactor * (1f / (int) frequencyIncrement);
 
         do
@@ -146,7 +136,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             
             CurrentFrequency += CurrentFrequency * _octaveScaler;
         }
-        while (CurrentFrequency < highCutOffFrequency + previousFrequency * _octaveScaler);
+        while (CurrentFrequency < generalSettings.HighCutOffFrequency + previousFrequency * _octaveScaler);
 
         CurrentFrequency = previousFrequency;
         StopGenerationAndListening();
