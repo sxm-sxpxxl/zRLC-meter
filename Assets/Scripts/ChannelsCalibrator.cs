@@ -41,8 +41,20 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         
         for (int i = 0; i < iterationNumber;)
         {
-            var inputRms = inputDeviceListener.InputFilledDataSamples.Rms();
-            var outputRms = inputDeviceListener.OutputFilledDataSamples.Rms();
+            if (inputDeviceListener.TryGetAndReleaseFilledSamplesByIntervals(
+                frequency: calibrationFrequency,
+                intervalsCount: 10,
+                out ReadOnlySpan<float> inputDataSamples,
+                out ReadOnlySpan<float> inputShiftDataSamples,
+                out ReadOnlySpan<float> outputDataSamples
+            ) == false)
+            {
+                yield return null;
+                continue;
+            }
+            
+            var inputRms = inputDataSamples.Rms();
+            var outputRms = outputDataSamples.Rms();
 
             if (float.IsNaN(inputRms) || float.IsNaN(outputRms))
             {

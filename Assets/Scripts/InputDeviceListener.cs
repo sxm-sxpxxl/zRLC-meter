@@ -11,12 +11,12 @@ using Unity.Collections;
 /// </summary>
 public sealed class InputDeviceListener : SingletonBehaviour<InputDeviceListener>
 {
+    private const int DataSamplesLength = 4096;
+    
     private InputStream _stream;
     private NativeArray<float> _inputDataSamples, _outputDataSamples;
-    private int _dataFilledCount, _inputChannelOffset, _outputChannelOffset;
+    private int _lastDataFilledIndex, _inputChannelOffset, _outputChannelOffset;
     
-    public ReadOnlySpan<float> InputFilledDataSamples => _inputDataSamples.GetSubArray(0, _dataFilledCount).GetReadOnlySpan();
-    public ReadOnlySpan<float> OutputFilledDataSamples => _outputDataSamples.GetSubArray(0, _dataFilledCount).GetReadOnlySpan();
     public int SampleRate => _stream.SampleRate;
     
     private bool IsListening => _stream != null;
@@ -24,8 +24,9 @@ public sealed class InputDeviceListener : SingletonBehaviour<InputDeviceListener
     protected override void Init()
     {
         base.Init();
-        _inputDataSamples = new NativeArray<float>(4096, Allocator.Persistent);
-        _outputDataSamples = new NativeArray<float>(4096, Allocator.Persistent);
+        _inputDataSamples = new NativeArray<float>(DataSamplesLength, Allocator.Persistent);
+        _outputDataSamples = new NativeArray<float>(DataSamplesLength, Allocator.Persistent);
+        _lastDataFilledIndex = 0;
     }
 
     private void OnDestroy()
@@ -44,14 +45,53 @@ public sealed class InputDeviceListener : SingletonBehaviour<InputDeviceListener
 
         ReadOnlySpan<float> lastFrameWindow = _stream.LastFrameWindow;
         int channelCount = _stream.ChannelCount;
-
-        _dataFilledCount = Mathf.Min(lastFrameWindow.Length, lastFrameWindow.Length / channelCount);
-
-        for (int i = 0; i < _dataFilledCount; i++)
+        
+        int lastFrameDataFilledCount = Mathf.Min(lastFrameWindow.Length, lastFrameWindow.Length / channelCount);
+        if (lastFrameDataFilledCount == 0)
         {
-            _inputDataSamples[i] = lastFrameWindow[i * channelCount + _inputChannelOffset];
-            _outputDataSamples[i] = lastFrameWindow[i * channelCount + _outputChannelOffset];
+            return;
         }
+        
+        int nextDataFilledCount = _lastDataFilledIndex + lastFrameDataFilledCount;
+        if (nextDataFilledCount > DataSamplesLength)
+        {
+            _lastDataFilledIndex = 0;
+            nextDataFilledCount = lastFrameDataFilledCount;
+        }
+        
+        for (int i = 0; i < lastFrameDataFilledCount; i++)
+        {
+            _inputDataSamples[_lastDataFilledIndex + i] = lastFrameWindow[i * channelCount + _inputChannelOffset];
+            _outputDataSamples[_lastDataFilledIndex + i] = lastFrameWindow[i * channelCount + _outputChannelOffset];
+        }
+        
+        _lastDataFilledIndex = nextDataFilledCount - 1;
+    }
+
+    public bool TryGetAndReleaseFilledSamplesByIntervals(
+        float frequency,
+        int intervalsCount,
+        out ReadOnlySpan<float> inputFilledSamplesByIntervals,
+        out ReadOnlySpan<float> inputShiftFilledSamplesByIntervals,
+        out ReadOnlySpan<float> outputFilledSamplesByIntervals
+    )
+    {
+        int samplesCountPerInterval = Mathf.CeilToInt(SampleRate / frequency);
+        int samplesCountPerQuarterInterval = Mathf.CeilToInt(samplesCountPerInterval / 4f);
+        int totalSamplesCount = samplesCountPerInterval * intervalsCount;
+
+        if (_lastDataFilledIndex < totalSamplesCount)
+        {
+            inputFilledSamplesByIntervals = inputShiftFilledSamplesByIntervals = outputFilledSamplesByIntervals = null;
+            return false;
+        }
+
+        _lastDataFilledIndex = 0;
+        
+        inputFilledSamplesByIntervals = _inputDataSamples.GetSubArray(0, totalSamplesCount).GetReadOnlySpan();
+        inputShiftFilledSamplesByIntervals = _inputDataSamples.GetSubArray(samplesCountPerQuarterInterval, totalSamplesCount).GetReadOnlySpan();
+        outputFilledSamplesByIntervals = _outputDataSamples.GetSubArray(0, totalSamplesCount).GetReadOnlySpan();
+        return true;
     }
 
     public void StartListening(int inputDeviceIndex, (int, int) inputOutputChannelOffsets)
@@ -84,6 +124,6 @@ public sealed class InputDeviceListener : SingletonBehaviour<InputDeviceListener
         
         _stream.Dispose();
         _stream = null;
-        _dataFilledCount = 0;
+        _lastDataFilledIndex = 0;
     }
 }

@@ -91,16 +91,30 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             float impedanceMagnitude = 0f, impedancePhaseInDeg = 0f;
             for (int i = 0; i < iterationsNumber;)
             {
+                if (_inputDeviceListener.TryGetAndReleaseFilledSamplesByIntervals(
+                    frequency: CurrentFrequency,
+                    intervalsCount: 1,
+                    out ReadOnlySpan<float> inputDataSamples,
+                    out ReadOnlySpan<float> inputShiftDataSamples,
+                    out ReadOnlySpan<float> outputDataSamples
+                ) == false)
+                {
+                    yield return null;
+                    continue;
+                }
+
                 float computedImpedanceMagnitude = ZRLCHelper.ComputeImpedanceMagnitude(
-                    _inputDeviceListener.InputFilledDataSamples,
-                    _inputDeviceListener.OutputFilledDataSamples,
+                    inputDataSamples,
+                    inputShiftDataSamples,
+                    outputDataSamples,
                     generalSettings.EquivalenceResistance,
                     channelsCalibrator.CalibrationMagnitudeRatioRms
                 );
                 
                 float computedImpedancePhaseInDeg = ZRLCHelper.ComputeImpedancePhaseInDeg(
-                    _inputDeviceListener.InputFilledDataSamples,
-                    _inputDeviceListener.OutputFilledDataSamples,
+                    inputDataSamples,
+                    inputShiftDataSamples,
+                    outputDataSamples,
                     _inputDeviceListener.SampleRate,
                     CurrentFrequency,
                     channelsCalibrator.CalibrationMagnitudeRatioRms
