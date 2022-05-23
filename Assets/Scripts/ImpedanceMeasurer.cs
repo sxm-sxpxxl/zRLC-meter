@@ -12,6 +12,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
     private const float OctaveFactor = 0.7032f;
 
     public event Action OnImpedanceMeasuringStarted = delegate { };
+    public event Action<string> OnImpedanceMeasuringErrorOccurred = delegate { };
     public event Action OnImpedanceMeasuringFinished = delegate { };
     public event Action<ImpedanceMeasureData> OnImpedanceMeasured = delegate { };
 
@@ -31,6 +32,8 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
 
     [field: Header("Debug Info"), SerializeField]
     private float CurrentFrequency { get; set; }
+    
+    private bool IsChannelCountValid => _inputDeviceListener.GetChannelCountBy(generalSettings.InputDeviceIndex) == 2;
 
     private enum FrequencyIncrement
     {
@@ -68,7 +71,13 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
 
     private IEnumerator MeasuringCoroutine()
     {
-        float previousFrequency;
+        if (IsChannelCountValid == false)
+        {
+            OnImpedanceMeasuringErrorOccurred.Invoke("There must be two channels of LineIn to carry out measurements. Сheck your connections and try again.");
+            yield break;
+        }
+        
+        float previousFrequency, elapsedRetryTimeoutInSec = 0f;
         CurrentFrequency = generalSettings.LowCutOffFrequency;
         _octaveScaler = OctaveFactor * (1f / (int) frequencyIncrement);
 
@@ -122,6 +131,14 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
 
                 if (float.IsNaN(computedImpedanceMagnitude) || float.IsNaN(computedImpedancePhaseInDeg))
                 {
+                    if (elapsedRetryTimeoutInSec > generalSettings.RetryTimeoutInSec)
+                    {
+                        StopGenerationAndListening();
+                        OnImpedanceMeasuringErrorOccurred.Invoke("Impedance is measured as NaN. Сheck your circuit and try again.");
+                        yield break;
+                    }
+                    
+                    elapsedRetryTimeoutInSec += Time.deltaTime;
                     yield return null;
                     continue;
                 }
@@ -129,7 +146,8 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                 impedanceMagnitude += computedImpedanceMagnitude;
                 impedancePhaseInDeg += computedImpedancePhaseInDeg;
                 i++;
-                
+
+                elapsedRetryTimeoutInSec = 0f;
                 yield return null;
             }
             impedanceMagnitude /= iterationsNumber;

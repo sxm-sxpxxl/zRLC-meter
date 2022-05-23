@@ -29,9 +29,11 @@ public sealed class GeneralSettings : ScriptableObject
     [SerializeField] private SamplingRatePreset sampleRate = SamplingRatePreset.AudioCD;
     [SerializeField] private ReferencePoint inputChannelReferencePoint = ReferencePoint.Left;
     [SerializeField, Min(0f)] private float equivalenceResistance = 100f;
+    [Space]
     [SerializeField, Range(10f, 1000f)] private float transientTimeInMs = 100f;
     [SerializeField, Min(0f)] private float lowCutOffFrequency = 200f;
     [SerializeField, Min(0f)] private float highCutOffFrequency = 1000f;
+    [SerializeField, Range(0f, 5f)] private float retryTimeoutInSec = 1f;
 
     public int InputDeviceIndex
     {
@@ -90,5 +92,11 @@ public sealed class GeneralSettings : ScriptableObject
     {
         get => highCutOffFrequency;
         set => highCutOffFrequency = Mathf.Max(value, 0f);
+    }
+
+    public float RetryTimeoutInSec
+    {
+        get => retryTimeoutInSec;
+        set => retryTimeoutInSec = Mathf.Clamp(value, 0f, 5f);
     }
 }

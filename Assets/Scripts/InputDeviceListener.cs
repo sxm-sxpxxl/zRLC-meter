@@ -2,6 +2,7 @@
 using UnityEngine;
 using SoundIO.SimpleDriver;
 using Unity.Collections;
+using DeviceType = SoundIO.SimpleDriver.DeviceType;
 
 /// <summary>
 /// Устанавливает соединение с входным аудио-устройством по запросу и продолжает слушать и собирать данные со входа,
@@ -67,6 +68,9 @@ public sealed class InputDeviceListener : SingletonBehaviour<InputDeviceListener
         
         _lastDataFilledIndex = nextDataFilledCount - 1;
     }
+
+    public int GetChannelCountBy(int inputDeviceIndex) =>
+        DeviceDriver.GetDeviceChannelCount(inputDeviceIndex, DeviceType.Input);
 
     public bool TryGetAndReleaseFilledSamplesByIntervals(
         float frequency,

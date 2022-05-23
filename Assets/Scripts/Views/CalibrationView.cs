@@ -16,12 +16,14 @@ public sealed class CalibrationView : MonoBehaviour
     private void Awake()
     {
         calibrationButton.onClick.AddListener(OnCalibrationButtonClick);
+        channelsCalibrator.OnCalibrationErrorOccurred += OnCalibrationErrorOccurred;
         channelsCalibrator.OnCalibrationFinished += ShowCalibrationRatioLevel;
     }
 
     private void OnDestroy()
     {
         calibrationButton.onClick.RemoveListener(OnCalibrationButtonClick);
+        channelsCalibrator.OnCalibrationErrorOccurred -= OnCalibrationErrorOccurred;
         channelsCalibrator.OnCalibrationFinished -= ShowCalibrationRatioLevel;
     }
 
@@ -42,4 +44,6 @@ public sealed class CalibrationView : MonoBehaviour
         calibrationValueText.text = $"{calibrationRatioLevel:N} dBFS";
         calibrationButton.interactable = true;
     }
+    
+    private void OnCalibrationErrorOccurred(string message) => calibrationButton.interactable = true;
 }

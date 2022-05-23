@@ -17,6 +17,7 @@ public sealed class MeasuringProcessView : MonoBehaviour
     {
         startButton.onClick.AddListener(OnClickStartButton);
         stopButton.onClick.AddListener(OnClickStopButton);
+        impedanceMeasurer.OnImpedanceMeasuringErrorOccurred += OnImpedanceMeasuringErrorOccurred;
         impedanceMeasurer.OnImpedanceMeasuringFinished += SetStopButtonMode;
         
         SetStopButtonMode();
@@ -26,6 +27,7 @@ public sealed class MeasuringProcessView : MonoBehaviour
     {
         startButton.onClick.RemoveListener(OnClickStartButton);
         stopButton.onClick.RemoveListener(OnClickStopButton);
+        impedanceMeasurer.OnImpedanceMeasuringErrorOccurred -= OnImpedanceMeasuringErrorOccurred;
         impedanceMeasurer.OnImpedanceMeasuringFinished -= SetStopButtonMode;
     }
 
@@ -40,6 +42,8 @@ public sealed class MeasuringProcessView : MonoBehaviour
         SetStopButtonMode();
         impedanceMeasurer.StopMeasuring();
     }
+    
+    private void OnImpedanceMeasuringErrorOccurred(string message) => SetStopButtonMode();
 
     private void SetStartButtonMode() => SetButtonMode(false);
     
