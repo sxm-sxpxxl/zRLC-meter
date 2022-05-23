@@ -46,6 +46,10 @@ public sealed class ImpedanceChartFeedView : MonoBehaviour
         
         magnitudeGraph.DataSource.AddPointToCategoryRealtime(magnitudeChartCategoryName, x: data.frequency, y: data.magnitude);
         phaseGraph.DataSource.AddPointToCategoryRealtime(phaseChartCategoryName, x: data.frequency, y: data.phaseInDeg);
+
+        magnitudeGraph.DataSource.AutomaticcHorizontaViewGap = 1f;
+        magnitudeGraph.DataSource.AutomaticVerticallViewGap = 0.1f;
+        phaseGraph.DataSource.AutomaticcHorizontaViewGap = 1f;
     }
 
     private void ClearChartData()
