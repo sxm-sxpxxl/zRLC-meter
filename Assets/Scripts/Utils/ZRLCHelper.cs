@@ -18,16 +18,24 @@ public static class ZRLCHelper
     /// <returns></returns>
     public static float ComputeImpedanceMagnitude(
         ReadOnlySpan<float> inputSignalSamples,
+        ReadOnlySpan<float> inputShiftSignalSamples,
         ReadOnlySpan<float> outputSignalSamples,
         float equivalenceResistance,
         float calibrationMagnitudeRatioRms
     )
     {
+        // Debug.Log($">> Input.Sample.Length: {inputSignalSamples.Length}");
+        
         var inputRms = inputSignalSamples.Rms();
         var outputRms = outputSignalSamples.Rms();
         
         var calibratedIORatio = calibrationMagnitudeRatioRms * (inputRms / outputRms);
         var impedanceMagnitude = equivalenceResistance / (calibratedIORatio - 1f);
+
+        // научрук like
+        // float x = inputSignalSamples.Rms() * outputSignalSamples.Rms();
+        // float y = inputShiftSignalSamples.Rms() * outputSignalSamples.Rms();
+        // var impedanceMagnitude = Mathf.Sqrt(x * x + y * y);
         
         return impedanceMagnitude;
     }
@@ -43,26 +51,33 @@ public static class ZRLCHelper
     /// <returns></returns>
     public static float ComputeImpedancePhaseInDeg(
         ReadOnlySpan<float> inputSignalSamples,
+        ReadOnlySpan<float> inputShiftSignalSamples,
         ReadOnlySpan<float> outputSignalSamples,
         int sampleRate,
         float frequency,
         float calibrationMagnitudeRatioRms
     )
     {
-        int maxSamplesLength = Mathf.Clamp(Mathf.CeilToInt(sampleRate / frequency), 0, inputSignalSamples.Length);
+        // int maxSamplesLength = Mathf.Clamp(Mathf.CeilToInt(sampleRate / frequency), 0, inputSignalSamples.Length);
         float averageSignalsProduct = 0f;
-
-        for (int i = 0; i < maxSamplesLength; i++)
+        
+        for (int i = 0; i < inputSignalSamples.Length; i++)
         {
             averageSignalsProduct += inputSignalSamples[i] * outputSignalSamples[i];
         }
         
-        averageSignalsProduct /= maxSamplesLength;
-
+        averageSignalsProduct /= inputSignalSamples.Length;
+        
         float inputPeak = inputSignalSamples.Peak();
         float outputPeak = outputSignalSamples.Peak();
-
-        float phaseInDeg = -Mathf.Acos(2f * calibrationMagnitudeRatioRms * averageSignalsProduct / (inputPeak * outputPeak)) * Mathf.Rad2Deg;
+        
+        float phaseInDeg = -Mathf.Acos(2f * 1f * averageSignalsProduct / (inputPeak * outputPeak)) * Mathf.Rad2Deg;
+        
+        // научрук like
+        // float x = inputSignalSamples.Rms() * outputSignalSamples.Rms();
+        // float y = inputShiftSignalSamples.Rms() * outputSignalSamples.Rms();
+        // var phaseInDeg = Mathf.Atan(y / x) * Mathf.Rad2Deg;
+        
         return phaseInDeg;
     }
 
