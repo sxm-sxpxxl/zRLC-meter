@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using Unity.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -9,135 +7,99 @@ using UnityEngine;
 public static class ZRLCHelper
 {
     /// <summary>
-    /// Рассчитать амплитуду импеданса.
+    /// Рассчитать импеданс тестового компонента с корректировкой на калибровочные данные.
     /// </summary>
     /// <param name="inputSignalSamples">Входной сигнал.</param>
     /// <param name="outputSignalSamples">Выходной сигнал.</param>
     /// <param name="equivalenceResistance">Эквивалентное сопротивление.</param>
-    /// <param name="calibrationMagnitudeRatioRms">Отношение между сигналами при калибровке.</param>
+    /// <param name="lineInputImpedance">Входной импеданс звуковой карты.</param>
+    /// <param name="groundImpedance">Импеданс в цепи с тестовым компонентом.</param>
+    /// <param name="testComponentType">Тип тестового компонента.</param>
     /// <returns></returns>
-    public static float ComputeImpedanceMagnitude(
+    public static ComplexFloat ComputeTestImpedance(
         ReadOnlySpan<float> inputSignalSamples,
-        ReadOnlySpan<float> inputShiftSignalSamples,
         ReadOnlySpan<float> outputSignalSamples,
         float equivalenceResistance,
-        float calibrationMagnitudeRatioRms
+        ComplexFloat lineInputImpedance,
+        ComplexFloat groundImpedance,
+        TestComponentType testComponentType
     )
     {
-        // Debug.Log($">> Input.Sample.Length: {inputSignalSamples.Length}");
+        var inRms = inputSignalSamples.Rms();
+        var outRms = outputSignalSamples.Rms();
         
-        var inputRms = inputSignalSamples.Rms();
-        var outputRms = outputSignalSamples.Rms();
-        
-        var calibratedIORatio = calibrationMagnitudeRatioRms * (inputRms / outputRms);
-        var impedanceMagnitude = equivalenceResistance / (calibratedIORatio - 1f);
+        var rref = equivalenceResistance;
+        var zr = lineInputImpedance.Magnitude;
+        var zg = groundImpedance.Magnitude;
 
-        // научрук like
-        // float x = inputSignalSamples.Rms() * outputSignalSamples.Rms();
-        // float y = inputShiftSignalSamples.Rms() * outputSignalSamples.Rms();
-        // var impedanceMagnitude = Mathf.Sqrt(x * x + y * y);
+        float magnitude = outRms * zr * rref / (zr * (inRms - outRms) - outRms * rref) - zg;
         
-        return impedanceMagnitude;
-    }
-
-    /// <summary>
-    /// Рассчитать фазу импеданса.
-    /// </summary>
-    /// <param name="inputSignalSamples">Входной сигнал.</param>
-    /// <param name="outputSignalSamples">Выходной сигнал.</param>
-    /// <param name="sampleRate">Частота дискретизации.</param>
-    /// <param name="frequency">Частота генерируемой синусоиды.</param>
-    /// <param name="calibrationMagnitudeRatioRms">Отношение между сигналами при калибровке.</param>
-    /// <returns></returns>
-    public static float ComputeImpedancePhaseInDeg(
-        ReadOnlySpan<float> inputSignalSamples,
-        ReadOnlySpan<float> inputShiftSignalSamples,
-        ReadOnlySpan<float> outputSignalSamples,
-        int sampleRate,
-        float frequency,
-        float calibrationMagnitudeRatioRms
-    )
-    {
-        // int maxSamplesLength = Mathf.Clamp(Mathf.CeilToInt(sampleRate / frequency), 0, inputSignalSamples.Length);
-        float averageSignalsProduct = 0f;
+        float phaseInRad = ComputeImpedancePhaseInRad(inputSignalSamples, outputSignalSamples);
+        float sign = testComponentType == TestComponentType.Capacitance ? -1f : 1f;
         
-        for (int i = 0; i < inputSignalSamples.Length; i++)
-        {
-            averageSignalsProduct += inputSignalSamples[i] * outputSignalSamples[i];
-        }
-        
-        averageSignalsProduct /= inputSignalSamples.Length;
-        
-        float inputPeak = inputSignalSamples.Peak();
-        float outputPeak = outputSignalSamples.Peak();
-        
-        float phaseInDeg = -Mathf.Acos(2f * 1f * averageSignalsProduct / (inputPeak * outputPeak)) * Mathf.Rad2Deg;
-        
-        // научрук like
-        // float x = inputSignalSamples.Rms() * outputSignalSamples.Rms();
-        // float y = inputShiftSignalSamples.Rms() * outputSignalSamples.Rms();
-        // var phaseInDeg = Mathf.Atan(y / x) * Mathf.Rad2Deg;
-        
-        return phaseInDeg;
-    }
-
-    /// <summary>
-    /// Рассчитать активное сопротивление в контуре RC.
-    /// </summary>
-    /// <param name="data">Результат измерения импеданса.</param>
-    /// <returns></returns>
-    public static float ComputeActiveResistanceWithCapacitance(ImpedanceMeasureData data)
-    {
-        float angularFrequency = GetAngularFrequencyFor(data.frequency);
-        float capacitance = ComputeCapacitance(data);
-        
-        return Mathf.Sqrt(Mathf.Abs(data.magnitude * data.magnitude - 1f / Mathf.Pow(angularFrequency * capacitance, 2)));
+        phaseInRad = sign * (phaseInRad + lineInputImpedance.AngleInRad);
+        return ComplexFloat.FromAngle(phaseInRad, magnitude);
     }
     
     /// <summary>
-    /// Рассчитать активное сопротивление в контуре RL.
+    /// Рассчитать импеданс.
+    /// </summary>
+    /// <param name="inputSignalSamples">Входной сигнал.</param>
+    /// <param name="outputSignalSamples">Выходной сигнал.</param>
+    /// <param name="equivalenceResistance">Эквивалентное сопротивление.</param>
+    /// <returns></returns>
+    public static ComplexFloat ComputeImpedance(
+        ReadOnlySpan<float> inputSignalSamples,
+        ReadOnlySpan<float> outputSignalSamples,
+        float equivalenceResistance
+    )
+    {
+        float magnitude = ComputeImpedanceMagnitude(inputSignalSamples, outputSignalSamples, equivalenceResistance);
+        float phaseInRad = ComputeImpedancePhaseInRad(inputSignalSamples, outputSignalSamples);
+
+        return ComplexFloat.FromAngle(phaseInRad, magnitude);
+    }
+
+    /// <summary>
+    /// Рассчитать активное сопротивление в тестовом импедансе.
     /// </summary>
     /// <param name="data">Результат измерения импеданса.</param>
     /// <returns></returns>
-    public static float ComputeActiveResistanceWithInductance(ImpedanceMeasureData data)
-    {
-        float angularFrequency = GetAngularFrequencyFor(data.frequency);
-        float inductance = ComputeInductance(data);
-        
-        return Mathf.Sqrt(data.magnitude * data.magnitude - Mathf.Pow(angularFrequency * inductance, 2));
-    }
+    public static float ComputeActiveResistance(ImpedanceMeasureData data) => data.impedance.real;
     
     /// <summary>
     /// Рассчитать емкость в контуре RC.
     /// </summary>
     /// <param name="data">Результат измерения импеданса.</param>
     /// <returns></returns>
-    public static float ComputeCapacitance(ImpedanceMeasureData data)
-    {
-        float angularFrequency = GetAngularFrequencyFor(data.frequency);
-        
-        float clampedPhaseInDeg = Mathf.Clamp(data.phaseInDeg, -89.9f, 89.9f);
-        float tanImpedancePhase = Mathf.Tan(clampedPhaseInDeg * Mathf.Deg2Rad);
-
-        return Mathf.Sqrt(Mathf.Abs(tanImpedancePhase * tanImpedancePhase - 1f)) /
-               (angularFrequency * Mathf.Max(Mathf.Abs(tanImpedancePhase), 0.01f) * data.magnitude);
-    }
+    public static float ComputeCapacitance(ImpedanceMeasureData data) =>
+        -1f / (2f * Mathf.PI * data.frequency * data.impedance.imag);
 
     /// <summary>
     /// Рассчитать индуктивность в контуре RL.
     /// </summary>
     /// <param name="data">Результат измерения импеданса.</param>
     /// <returns></returns>
-    public static float ComputeInductance(ImpedanceMeasureData data)
-    {
-        float angularFrequency = GetAngularFrequencyFor(data.frequency);
-        
-        float clampedPhaseInDeg = Mathf.Clamp(data.phaseInDeg, -89.9f, 89.9f);
-        float tanImpedancePhase = Mathf.Tan(clampedPhaseInDeg * Mathf.Deg2Rad);
-        
-        return data.magnitude * tanImpedancePhase /
-               (angularFrequency * Mathf.Sqrt(1f + tanImpedancePhase * tanImpedancePhase));
-    }
+    public static float ComputeInductance(ImpedanceMeasureData data) =>
+        data.impedance.imag / (2f * Mathf.PI * data.frequency);
 
-    private static float GetAngularFrequencyFor(float frequency) => 2f * Mathf.PI * frequency;
+    private static float ComputeImpedanceMagnitude(ReadOnlySpan<float> vInSamples, ReadOnlySpan<float> vOutSamples, float rref) =>
+        rref / (vInSamples.Rms() / vOutSamples.Rms() - 1f);
+
+    private static float ComputeImpedancePhaseInRad(ReadOnlySpan<float> vInSamples, ReadOnlySpan<float> vOutSamples)
+    {
+        float averageProduct = 0f;
+        
+        for (int i = 0; i < vInSamples.Length; i++)
+        {
+            averageProduct += vInSamples[i] * vOutSamples[i];
+        }
+        
+        averageProduct /= vInSamples.Length;
+        
+        float inPeak = vInSamples.Peak();
+        float outPeak = vOutSamples.Peak();
+        
+        return Mathf.Acos(2f * averageProduct / (inPeak * outPeak));
+    }
 }

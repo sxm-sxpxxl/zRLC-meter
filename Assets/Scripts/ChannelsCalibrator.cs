@@ -9,24 +9,20 @@ using UnityEngine.Assertions;
 [DisallowMultipleComponent]
 public sealed class ChannelsCalibrator : MonoBehaviour
 {
-    private const float MaxChannelDifferenceLevel = 3f;
-    
-    public event Action<float> OnCalibrationFinished = delegate { };
+    public event Action OnCalibrationFinished = delegate { };
     public event Action<string> OnCalibrationErrorOccurred = delegate { };
 
     [Header("Dependencies")]
     [SerializeField] private GeneralSettings generalSettings;
 
-    [Header("Settings")]
-    [SerializeField, Range(1, 100)] private int iterationNumber = 10;
-    [SerializeField, Min(0f)] private float calibrationFrequency = 500f;
-
-    private float? _calibrationMagnitudeRatioRms = null;
     private OutputDeviceGenerator _outputDeviceGenerator;
     private InputDeviceListener _inputDeviceListener;
 
-    public float CalibrationMagnitudeRatioRms => _calibrationMagnitudeRatioRms ?? 1f;
-    
+    private ComplexFloat? _lineInputImpedance, _groundImpedance;
+
+    public ComplexFloat LineInputImpedance => _lineInputImpedance ?? ComplexFloat.FromAngle(0f, 1e9f);
+    public ComplexFloat GroundImpedance => _groundImpedance ?? ComplexFloat.FromAngle(0f, 0f);
+
     private bool IsChannelCountValid => _inputDeviceListener.GetChannelCountBy(generalSettings.InputDeviceIndex) == 2;
 
     private void Start()
@@ -38,12 +34,61 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         Assert.IsNotNull(_inputDeviceListener);
     }
 
-    public void Calibrate()
+    public void OpenCalibrate()
     {
-        StartCoroutine(CalibrationCoroutine());
+        const float MinLineInputImpedanceMagnitude = 1e4f;
+        
+        StartCoroutine(AverageCalibrationCoroutine(result =>
+        {
+            _lineInputImpedance = result;
+            Debug.Log($"LineIn impedance: <color=yellow>Magnitude</color> = {_lineInputImpedance.Value.Magnitude} Ohm " +
+                      $"| <color=yellow>Phase</color> = {_lineInputImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
+
+            if (_lineInputImpedance.Value.Magnitude < MinLineInputImpedanceMagnitude)
+            {
+                OnCalibrationErrorOccurred.Invoke($"LineIn impedance is measured as too small ({_lineInputImpedance.Value.Magnitude} Ohm). Check your circuit and try again.");
+                return;
+            }
+            
+            OnCalibrationFinished.Invoke();
+        }));
+    }
+    
+    public void ShortCalibrate()
+    {
+        const float MaxGroundImpedanceMagnitude = 1f;
+        
+        StartCoroutine(AverageCalibrationCoroutine(result =>
+        {
+            _groundImpedance = result;
+            Debug.Log($"Ground impedance: <color=yellow>Magnitude</color> = {_groundImpedance.Value.Magnitude} Ohm " +
+                      $"| <color=yellow>Phase</color> = {_groundImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
+            
+            if (_groundImpedance.Value.Magnitude > MaxGroundImpedanceMagnitude)
+            {
+                OnCalibrationErrorOccurred.Invoke($"Ground impedance is measured as too big ({_groundImpedance.Value.Magnitude} Ohm). Check your circuit and try again.");
+                return;
+            }
+
+            OnCalibrationFinished.Invoke();
+        }));
     }
 
-    private IEnumerator CalibrationCoroutine()
+    private IEnumerator AverageCalibrationCoroutine(Action<ComplexFloat> getAverageCalibratedImpedanceCallback)
+    {
+        int iterations = Mathf.CeilToInt(generalSettings.AveragingIterations / 20f);
+        ComplexFloat averageCalibratedImpedance = ComplexFloat.Zero;
+
+        for (int i = 0; i < iterations; i++)
+        {
+            yield return StartCoroutine(CalibrationCoroutine(result => averageCalibratedImpedance += result));
+        }
+
+        averageCalibratedImpedance /= iterations;
+        getAverageCalibratedImpedanceCallback.Invoke(averageCalibratedImpedance);
+    }
+
+    private IEnumerator CalibrationCoroutine(Action<ComplexFloat> getCalibratedImpedanceCallback)
     {
         var outputDeviceGenerator = OutputDeviceGenerator.Instance;
         var inputDeviceListener = InputDeviceListener.Instance;
@@ -54,19 +99,19 @@ public sealed class ChannelsCalibrator : MonoBehaviour
             yield break;
         }
         
-        outputDeviceGenerator.StartGeneration(generalSettings.OutputDeviceIndex, calibrationFrequency, generalSettings.SampleRate);
+        outputDeviceGenerator.StartGeneration(generalSettings.OutputDeviceIndex, generalSettings.CalibrationFrequency, generalSettings.SampleRate);
         inputDeviceListener.StartListening(generalSettings.InputDeviceIndex, generalSettings.InputOutputChannelOffsets);
 
         yield return new WaitForSecondsRealtime(generalSettings.TransientTimeInMs.ConvertToNormal(fromMetric: Metric.Milli));
         
-        _calibrationMagnitudeRatioRms = 0f;
-        float channelDifferenceLevel = 0f, elapsedRetryTimeoutInSec = 0f;
+        ComplexFloat calibratedImpedance = ComplexFloat.Zero;
+        float elapsedRetryTimeoutInSec = 0f;
         
-        for (int i = 0; i < iterationNumber;)
+        for (int i = 0; i < generalSettings.AveragingIterations;)
         {
             if (inputDeviceListener.TryGetAndReleaseFilledSamplesByIntervals(
-                frequency: calibrationFrequency,
-                intervalsCount: 1,
+                frequency: generalSettings.CalibrationFrequency,
+                intervalsCount: 5,
                 out ReadOnlySpan<float> inputDataSamples,
                 out ReadOnlySpan<float> inputShiftDataSamples,
                 out ReadOnlySpan<float> outputDataSamples
@@ -75,18 +120,17 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                 yield return null;
                 continue;
             }
-            
-            var inputRms = inputDataSamples.Rms();
-            var outputRms = outputDataSamples.Rms();
 
-            if (float.IsNaN(inputRms) || float.IsNaN(outputRms))
+            ComplexFloat computedImpedance = ZRLCHelper.ComputeImpedance(inputDataSamples, outputDataSamples, generalSettings.EquivalenceResistance);
+
+            if (float.IsNaN(computedImpedance.Magnitude) || float.IsNaN(computedImpedance.AngleInRad))
             {
                 if (elapsedRetryTimeoutInSec > generalSettings.RetryTimeoutInSec)
                 {
                     outputDeviceGenerator.StopGeneration();
                     inputDeviceListener.StopListening();
                     
-                    OnCalibrationErrorOccurred.Invoke("I/O channels are measured as NaN. Сheck your circuit and try again.");
+                    OnCalibrationErrorOccurred.Invoke("Impedance is measured as NaN. Сheck your circuit and try again.");
                     yield break;
                 }
                 
@@ -94,11 +138,8 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                 yield return null;
                 continue;
             }
-            
-            Debug.Log($"<color=yellow>[it: {i}]</color> Input.Rms: {inputRms} V | Output.Rms: {outputRms} V");
-            
-            _calibrationMagnitudeRatioRms += outputRms / inputRms;
-            channelDifferenceLevel += outputRms.Level() - inputRms.Level();
+
+            calibratedImpedance += computedImpedance;
             i++;
             
             elapsedRetryTimeoutInSec = 0f;
@@ -108,17 +149,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         outputDeviceGenerator.StopGeneration();
         inputDeviceListener.StopListening();
         
-        _calibrationMagnitudeRatioRms = Mathf.Abs(_calibrationMagnitudeRatioRms.Value / iterationNumber);
-        Debug.Log($"Calibration <color=yellow>Magnitude RMS</color>: {_calibrationMagnitudeRatioRms.Value} V");
-        
-        channelDifferenceLevel = Mathf.Abs(channelDifferenceLevel / iterationNumber);
-        Debug.Log($"Channel <color=yellow>Difference Level</color>: {channelDifferenceLevel} dBFS");
-        
-        OnCalibrationFinished.Invoke(channelDifferenceLevel);
-
-        if (channelDifferenceLevel > MaxChannelDifferenceLevel)
-        {
-            OnCalibrationErrorOccurred.Invoke("Channel difference level larger than 3 dB. Check your connections and try again.");
-        }
+        calibratedImpedance /= generalSettings.AveragingIterations;
+        getCalibratedImpedanceCallback.Invoke(calibratedImpedance);
     }
 }

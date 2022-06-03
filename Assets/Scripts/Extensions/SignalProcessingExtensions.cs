@@ -6,34 +6,15 @@ using UnityEngine;
 /// </summary>
 public static class SignalProcessingExtensions
 {
-    // Full scale sin wave = 0 dBFS : refLevel = 1 / sqrt(2)
-    const float DefaultRefLevel = 0.7071f;
+    const float DefaultRefLevel = 0.7071f; // Full scale sin wave = 0 dBFS : refLevel = 1 / sqrt(2)
     const float LevelZeroOffset = 1.5849e-13f;
-
+    
     /// <summary>
-    /// Возвращает пиковое (или просто максимальное) значение для переданного сигнала.
-    /// Отражает амплитуду переданного сигнала.
+    /// Возвращает пиковое значение переданного сигнала.
     /// </summary>
     /// <param name="values">Сигнал.</param>
     /// <returns></returns>
-    public static float Peak(this ReadOnlySpan<float> values)
-    {
-        if (values.Length == 0)
-        {
-            return 0.0f;            
-        }
-        
-        float maxValue = values[0];
-        for (int i = 1; i < values.Length; i++)
-        {
-            if (values[i] > maxValue)
-            {
-                maxValue = values[i];
-            }
-        }
-        
-        return maxValue;
-    }
+    public static float Peak(this ReadOnlySpan<float> values) => Mathf.Sqrt(2) * values.Rms();
     
     /// <summary>
     /// Возвращает среднеквадратичное значение переданного сигнала.

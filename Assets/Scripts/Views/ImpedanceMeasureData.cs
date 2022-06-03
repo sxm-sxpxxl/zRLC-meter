@@ -3,7 +3,6 @@
 /// </summary>
 public struct ImpedanceMeasureData
 {
-    public float magnitude;
-    public float phaseInDeg;
+    public ComplexFloat impedance;
     public float frequency;
 }

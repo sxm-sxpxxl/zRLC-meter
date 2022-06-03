@@ -3,15 +3,31 @@
 public enum SamplingRatePreset
 {
     [InspectorName("8000 Hz")]
-    Telephone = 8000,
+    SamplingRate1 = 8000,
+    [InspectorName("16000 Hz")]
+    SamplingRate2 = 16000,
+    [InspectorName("32000 Hz")]
+    SamplingRate3 = 32000,
     [InspectorName("44100 Hz")]
-    AudioCD = 44100
+    SamplingRate4 = 44100,
+    [InspectorName("48000 Hz")]
+    Default = 48000,
+    [InspectorName("96000 Hz")]
+    SamplingRate6 = 96000
 }
 
-public enum ReferencePoint
+public enum ReferenceChannel
 {
     Left = 0,
     Right = 1
+}
+
+public enum FrequencyIncrement
+{
+    [InspectorName("1 ⁒ 24 octave")]
+    OneTwentyFourthOctave = 24,
+    [InspectorName("1 ⁒ 48 octave")]
+    OneFortyEighthOctave = 48
 }
 
 /// <summary>
@@ -20,20 +36,26 @@ public enum ReferencePoint
 [CreateAssetMenu(fileName = "NewGeneralSettings", menuName = "ZRLCMeter/GeneralSettings", order = 0)]
 public sealed class GeneralSettings : ScriptableObject
 {
-    [Header("I/O settings")]
+    [Header("Soundcard configuration")]
     [SerializeField] private int inputDeviceIndex = -1;
     [SerializeField] private int outputDeviceIndex = -1;
     [SerializeField, Range(0f, 1f)] private float outputDeviceVolume = 1f;
-
-    [Header("Measurement settings")]
-    [SerializeField] private SamplingRatePreset sampleRate = SamplingRatePreset.AudioCD;
-    [SerializeField] private ReferencePoint inputChannelReferencePoint = ReferencePoint.Left;
+    
+    [Header("Measurement configuration")]
+    [SerializeField] private SamplingRatePreset sampleRate = SamplingRatePreset.Default;
+    [SerializeField] private ReferenceChannel inputReference = ReferenceChannel.Left;
     [SerializeField, Min(0f)] private float equivalenceResistance = 100f;
-    [Space]
+    [SerializeField, Min(0f)] private float calibrationFrequency = 1000f;
+    
+    [Header("Frequency range configuration")]
     [SerializeField, Range(10f, 1000f)] private float transientTimeInMs = 100f;
     [SerializeField, Min(0f)] private float lowCutOffFrequency = 200f;
     [SerializeField, Min(0f)] private float highCutOffFrequency = 1000f;
+    [SerializeField] private FrequencyIncrement frequencyIncrement = FrequencyIncrement.OneTwentyFourthOctave;
+    
+    [Header("Other")]
     [SerializeField, Range(0f, 5f)] private float retryTimeoutInSec = 1f;
+    [SerializeField, Range(1, 100)] private int averagingIterations = 100;
 
     public int InputDeviceIndex
     {
@@ -59,21 +81,26 @@ public sealed class GeneralSettings : ScriptableObject
         set => sampleRate = (SamplingRatePreset) value;
     }
     
-    public ReferencePoint InputChannelReferencePoint
+    public ReferenceChannel InputReferenceChannel
     {
-        get => inputChannelReferencePoint;
-        set => inputChannelReferencePoint = value;
+        set => inputReference = value;
     }
 
     public (int, int) InputOutputChannelOffsets
     {
-        get => inputChannelReferencePoint == ReferencePoint.Left ? (0, 1) : (1, 0);
+        get => inputReference == ReferenceChannel.Left ? (0, 1) : (1, 0);
     }
 
     public float EquivalenceResistance
     {
         get => equivalenceResistance;
         set => equivalenceResistance = Mathf.Max(value, 0f);
+    }
+
+    public float CalibrationFrequency
+    {
+        get => calibrationFrequency;
+        set => calibrationFrequency = Mathf.Max(value, 0f);
     }
 
     public float TransientTimeInMs
@@ -93,10 +120,22 @@ public sealed class GeneralSettings : ScriptableObject
         get => highCutOffFrequency;
         set => highCutOffFrequency = Mathf.Max(value, 0f);
     }
+    
+    public FrequencyIncrement FrequencyIncrement
+    {
+        get => frequencyIncrement;
+        set => frequencyIncrement = value;
+    }
 
     public float RetryTimeoutInSec
     {
         get => retryTimeoutInSec;
         set => retryTimeoutInSec = Mathf.Clamp(value, 0f, 5f);
+    }
+
+    public int AveragingIterations
+    {
+        get => averagingIterations;
+        set => averagingIterations = Mathf.Clamp(value, 1, 100);
     }
 }

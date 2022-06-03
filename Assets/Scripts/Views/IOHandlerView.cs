@@ -86,7 +86,7 @@ public sealed class IOHandlerView : MonoBehaviour
     
     private void SetInputReferencePoint(int inputReferencePoint)
     {
-        generalSettings.InputChannelReferencePoint = (ReferencePoint) inputReferencePoint;
+        generalSettings.InputReferenceChannel = (ReferenceChannel) inputReferencePoint;
     }
     
     private void CreateDeviceOptionsFor(Dropdown deviceDropdown, DeviceType deviceType, int deviceCount)

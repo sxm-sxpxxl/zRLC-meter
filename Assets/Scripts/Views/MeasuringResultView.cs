@@ -29,7 +29,7 @@ public sealed class MeasuringResultView : MonoBehaviour
     private void OnImpedanceSelected(ImpedanceMeasureData data)
     {
         SetParameterValueText(frequencyValueText, data.frequency, "Hz");
-        SetParameterValueText(activeResistanceValueText, ZRLCHelper.ComputeActiveResistanceWithCapacitance(data), "Ohm");
+        SetParameterValueText(activeResistanceValueText, ZRLCHelper.ComputeActiveResistance(data), "Ohm");
         SetParameterValueText(capacitanceValueText, ZRLCHelper.ComputeCapacitance(data), "F");
     }
 

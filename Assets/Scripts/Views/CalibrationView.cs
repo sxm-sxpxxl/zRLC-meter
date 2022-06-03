@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+// todo: refactoring
 /// <summary>
-/// Обрабатывает нажатие на кнопку Calibrate и отображает результат калибровки в текстовом поле.
+/// Обрабатывает нажатия на кнопки калибровки.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class CalibrationView : MonoBehaviour
@@ -10,40 +11,56 @@ public sealed class CalibrationView : MonoBehaviour
     [SerializeField] private ChannelsCalibrator channelsCalibrator;
     
     [Space]
-    [SerializeField] private Button calibrationButton;
-    [SerializeField] private Text calibrationValueText;
+    [SerializeField] private Button openCalibrationButton;
+    [SerializeField] private Button shortCalibrationButton;
 
     private void Awake()
     {
-        calibrationButton.onClick.AddListener(OnCalibrationButtonClick);
+        openCalibrationButton.onClick.AddListener(OnOpenCalibrationButtonClick);
+        shortCalibrationButton.onClick.AddListener(OnShortCalibrationButtonClick);
+        
         channelsCalibrator.OnCalibrationErrorOccurred += OnCalibrationErrorOccurred;
-        channelsCalibrator.OnCalibrationFinished += ShowCalibrationRatioLevel;
+        channelsCalibrator.OnCalibrationFinished += OnCalibrationFinished;
     }
 
     private void OnDestroy()
     {
-        calibrationButton.onClick.RemoveListener(OnCalibrationButtonClick);
+        openCalibrationButton.onClick.RemoveListener(OnOpenCalibrationButtonClick);
         channelsCalibrator.OnCalibrationErrorOccurred -= OnCalibrationErrorOccurred;
-        channelsCalibrator.OnCalibrationFinished -= ShowCalibrationRatioLevel;
+        channelsCalibrator.OnCalibrationFinished -= OnCalibrationFinished;
     }
 
     private void Start()
     {
-        calibrationValueText.text = "-";
-        calibrationButton.interactable = true;
+        openCalibrationButton.interactable = true;
+        shortCalibrationButton.interactable = true;
     }
 
-    private void OnCalibrationButtonClick()
+    private void OnOpenCalibrationButtonClick()
     {
-        calibrationButton.interactable = false;
-        channelsCalibrator.Calibrate();
+        openCalibrationButton.interactable = false;
+        shortCalibrationButton.interactable = false;
+        
+        channelsCalibrator.OpenCalibrate();
     }
 
-    private void ShowCalibrationRatioLevel(float calibrationRatioLevel)
+    private void OnShortCalibrationButtonClick()
     {
-        calibrationValueText.text = $"{calibrationRatioLevel:N} dBFS";
-        calibrationButton.interactable = true;
+        openCalibrationButton.interactable = false;
+        shortCalibrationButton.interactable = false;
+        
+        channelsCalibrator.ShortCalibrate();
     }
-    
-    private void OnCalibrationErrorOccurred(string message) => calibrationButton.interactable = true;
+
+    private void OnCalibrationFinished()
+    {
+        openCalibrationButton.interactable = true;
+        shortCalibrationButton.interactable = true;
+    }
+
+    private void OnCalibrationErrorOccurred(string message)
+    {
+        openCalibrationButton.interactable = true;
+        shortCalibrationButton.interactable = true;
+    }
 }
