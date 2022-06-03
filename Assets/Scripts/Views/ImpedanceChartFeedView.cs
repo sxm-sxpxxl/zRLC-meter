@@ -39,6 +39,13 @@ public sealed class ImpedanceChartFeedView : MonoBehaviour
         ImpedanceMeasureData data = _measuredImpedanceMagnitudes[graphEventArgs.Index];
         OnImpedanceSelected.Invoke(data);
     }
+    
+    public void ClearChartData()
+    {
+        _measuredImpedanceMagnitudes.Clear();
+        magnitudeGraph.DataSource.ClearCategory(magnitudeChartCategoryName);
+        phaseGraph.DataSource.ClearCategory(phaseChartCategoryName);
+    }
 
     private void AddImpedanceMeasureToChart(ImpedanceMeasureData data)
     {
@@ -50,12 +57,5 @@ public sealed class ImpedanceChartFeedView : MonoBehaviour
         magnitudeGraph.DataSource.AutomaticcHorizontaViewGap = 1f;
         magnitudeGraph.DataSource.AutomaticVerticallViewGap = 0.1f;
         phaseGraph.DataSource.AutomaticcHorizontaViewGap = 1f;
-    }
-
-    private void ClearChartData()
-    {
-        _measuredImpedanceMagnitudes.Clear();
-        magnitudeGraph.DataSource.ClearCategory(magnitudeChartCategoryName);
-        phaseGraph.DataSource.ClearCategory(phaseChartCategoryName);
     }
 }
