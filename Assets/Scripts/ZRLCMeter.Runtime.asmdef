@@ -1,5 +1,5 @@
 {
-    "name": "RLCMeter.Runtime",
+    "name": "zRLCMeter.Runtime",
     "rootNamespace": "",
     "references": [
         "GUID:1ebb771edbf34a74ab5a5f126407b28b",
