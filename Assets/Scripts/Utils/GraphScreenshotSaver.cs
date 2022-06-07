@@ -1,5 +1,5 @@
-﻿using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
+using SFB;
 
 /// <summary>
 /// Получает изображение из камеры по запросу и сохраняет как картинку в формате PNG.
@@ -29,7 +29,13 @@ public sealed class GraphScreenshotSaver : MonoBehaviour
         Rect rect = new Rect(0, 0, renderTexture.width, renderTexture.height);
         renderResult.ReadPixels(rect, 0, 0);
 
-        string path = EditorUtility.SaveFilePanel("Save graph as PNG image", string.Empty, "impedance-graph", "png");
+        string path = StandaloneFileBrowser.SaveFilePanel(
+            title: "Save graph",
+            directory: string.Empty,
+            defaultName: "impedance-graph",
+            extensions: new[] { new ExtensionFilter("Image Files", "png")}
+        );
+        
         if (path.Length == 0)
         {
             return;
