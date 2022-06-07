@@ -1,0 +1,14 @@
+{
+  "author": "G\u00f6khan G\u00f6k\u00e7e",
+  "description": "A native file browser for unity standalone platforms.",
+  "displayName": "standalone-file-browser",
+  "keywords": [
+    "unity"
+  ],
+  "license": "MIT",
+  "name": "standalone-file-browser",
+  "repository": "https://github.com/gkngkc/UnityStandaloneFileBrowser",
+  "unity": "2018.1",
+  "unityRelease": "1f1",
+  "version": "1.2.0"
+}

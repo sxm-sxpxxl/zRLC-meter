@@ -82,6 +82,12 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "standalone-file-browser": {
+      "version": "file:standalone-file-browser",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
