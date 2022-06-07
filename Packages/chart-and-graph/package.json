@@ -1,0 +1,10 @@
+﻿{
+  "author": "BitSplash Interactive",
+  "description": "Top notch 2D/3D data visualization for unity.",
+  "displayName": "chart-and-graph",
+  "keywords": ["unity"],
+  "name": "chart-and-graph",
+  "unity": "2019.4",
+  "unityRelease": "35f1",
+  "version": "1.11.5"
+}
