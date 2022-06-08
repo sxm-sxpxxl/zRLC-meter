@@ -111,7 +111,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         {
             if (inputDeviceListener.TryGetAndReleaseFilledSamplesByIntervals(
                 frequency: generalSettings.CalibrationFrequency,
-                intervalsCount: 5,
+                intervalsCount: generalSettings.SignalIntervalsCount,
                 out ReadOnlySpan<float> inputDataSamples,
                 out ReadOnlySpan<float> inputShiftDataSamples,
                 out ReadOnlySpan<float> outputDataSamples

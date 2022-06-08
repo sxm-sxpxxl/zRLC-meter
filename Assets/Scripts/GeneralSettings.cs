@@ -56,6 +56,7 @@ public sealed class GeneralSettings : ScriptableObject
     [Header("Other")]
     [SerializeField, Range(0f, 5f)] private float retryTimeoutInSec = 1f;
     [SerializeField, Range(1, 100)] private int averagingIterations = 100;
+    [SerializeField, Range(1, 10)] private int signalIntervalsCount = 3;
 
     public int InputDeviceIndex
     {
@@ -137,5 +138,11 @@ public sealed class GeneralSettings : ScriptableObject
     {
         get => averagingIterations;
         set => averagingIterations = Mathf.Clamp(value, 1, 100);
+    }
+    
+    public int SignalIntervalsCount
+    {
+        get => signalIntervalsCount;
+        set => signalIntervalsCount = Mathf.Clamp(value, 1, 10);
     }
 }

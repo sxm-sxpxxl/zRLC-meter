@@ -90,7 +90,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             {
                 if (_inputDeviceListener.TryGetAndReleaseFilledSamplesByIntervals(
                     frequency: CurrentFrequency,
-                    intervalsCount: 5,
+                    intervalsCount: generalSettings.SignalIntervalsCount,
                     out ReadOnlySpan<float> inputDataSamples,
                     out ReadOnlySpan<float> inputShiftDataSamples,
                     out ReadOnlySpan<float> outputDataSamples
