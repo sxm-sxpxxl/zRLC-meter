@@ -37,7 +37,7 @@ public sealed class MeasuringSettingsView : MonoBehaviour
             .ToList();
         
         sampleRateDropdown.RefreshShownValue();
-        sampleRateDropdown.value = _sampleRates.IndexOf(generalSettings.SampleRate);
+        sampleRateDropdown.value = _sampleRates.IndexOf(generalSettings.SamplingRate);
 
         sampleRateDropdown.onValueChanged.AddListener(SetSampleRate);
     }
@@ -67,7 +67,7 @@ public sealed class MeasuringSettingsView : MonoBehaviour
 
     private void SetSampleRate(int dropdownIndex)
     {
-        generalSettings.SampleRate = _sampleRates[dropdownIndex];
+        generalSettings.SamplingRate = _sampleRates[dropdownIndex];
     }
 
     private void SetValueToInputField(InputField target, float value)

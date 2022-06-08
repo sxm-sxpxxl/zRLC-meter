@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 /// <summary>
 /// Структура для хранения комплексных чисел вида Re + jIm, где Re - действительная часть, Im - мнимая.
@@ -22,6 +23,23 @@ public struct ComplexFloat
     public static ComplexFloat FromAngle(float angleInRad, float magnitude)
     {
         return new ComplexFloat(Mathf.Cos(angleInRad) * magnitude, Mathf.Sin(angleInRad) * magnitude);
+    }
+    
+    public static ComplexFloat[] FloatToComplex(ReadOnlySpan<float> data, int length)
+    {
+        var complexData = new ComplexFloat[length];
+        
+        for (int i = 0; i < data.Length; i++)
+        {
+            complexData[i] = new ComplexFloat(data[i], 0f);
+        }
+
+        for (int i = data.Length; i < length; i++)
+        {
+            complexData[i] = ComplexFloat.Zero;
+        }
+
+        return complexData;
     }
 
     public static ComplexFloat operator +(ComplexFloat a, ComplexFloat b) =>

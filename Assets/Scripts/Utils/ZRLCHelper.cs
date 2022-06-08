@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
+// todo: refactoring
 /// <summary>
 /// Рассчитывает импеданс (амплитуду и фазу) и RLC параметры импеданса.
 /// </summary>
@@ -22,23 +23,20 @@ public static class ZRLCHelper
         float equivalenceResistance,
         ComplexFloat lineInputImpedance,
         ComplexFloat groundImpedance,
-        TestComponentType testComponentType
+        TestComponentType testComponentType,
+        float frequency,
+        float samplingRate
     )
     {
-        var inRms = inputSignalSamples.Rms();
-        var outRms = outputSignalSamples.Rms();
+        var inPeak = inputSignalSamples.ComplexPeak(frequency, samplingRate);
+        var outPeak = outputSignalSamples.ComplexPeak(frequency, samplingRate);;
         
         var rref = equivalenceResistance;
-        var zr = lineInputImpedance.Magnitude;
-        var zg = groundImpedance.Magnitude;
+        var zr = lineInputImpedance;
+        var zg = groundImpedance;
 
-        float magnitude = outRms * zr * rref / (zr * (inRms - outRms) - outRms * rref) - zg;
-        
-        float phaseInRad = ComputeImpedancePhaseInRad(inputSignalSamples, outputSignalSamples);
-        float sign = testComponentType == TestComponentType.Capacitance ? -1f : 1f;
-        
-        phaseInRad = sign * (phaseInRad + lineInputImpedance.AngleInRad);
-        return ComplexFloat.FromAngle(phaseInRad, magnitude);
+        ComplexFloat testImpedance = outPeak * zr * rref / (zr * (inPeak - outPeak) - outPeak * rref) - zg;
+        return testImpedance;
     }
     
     /// <summary>
@@ -51,13 +49,15 @@ public static class ZRLCHelper
     public static ComplexFloat ComputeImpedance(
         ReadOnlySpan<float> inputSignalSamples,
         ReadOnlySpan<float> outputSignalSamples,
-        float equivalenceResistance
+        float equivalenceResistance,
+        float frequency,
+        float samplingRate
     )
     {
-        float magnitude = ComputeImpedanceMagnitude(inputSignalSamples, outputSignalSamples, equivalenceResistance);
-        float phaseInRad = ComputeImpedancePhaseInRad(inputSignalSamples, outputSignalSamples);
-
-        return ComplexFloat.FromAngle(phaseInRad, magnitude);
+        ComplexFloat inPeak = inputSignalSamples.ComplexPeak(frequency, samplingRate);
+        ComplexFloat outPeak = outputSignalSamples.ComplexPeak(frequency, samplingRate);
+        
+        return equivalenceResistance / (inPeak / outPeak - 1f);
     }
 
     /// <summary>
@@ -82,24 +82,4 @@ public static class ZRLCHelper
     /// <returns></returns>
     public static float ComputeInductance(ImpedanceMeasureData data) =>
         data.impedance.imag / (2f * Mathf.PI * data.frequency);
-
-    private static float ComputeImpedanceMagnitude(ReadOnlySpan<float> vInSamples, ReadOnlySpan<float> vOutSamples, float rref) =>
-        rref / (vInSamples.Rms() / vOutSamples.Rms() - 1f);
-
-    private static float ComputeImpedancePhaseInRad(ReadOnlySpan<float> vInSamples, ReadOnlySpan<float> vOutSamples)
-    {
-        float averageProduct = 0f;
-        
-        for (int i = 0; i < vInSamples.Length; i++)
-        {
-            averageProduct += vInSamples[i] * vOutSamples[i];
-        }
-        
-        averageProduct /= vInSamples.Length;
-        
-        float inPeak = vInSamples.Peak();
-        float outPeak = vOutSamples.Peak();
-        
-        return Mathf.Acos(2f * averageProduct / (inPeak * outPeak));
-    }
 }

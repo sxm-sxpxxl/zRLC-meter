@@ -8,6 +8,24 @@ public static class SignalProcessingExtensions
 {
     const float DefaultRefLevel = 0.7071f; // Full scale sin wave = 0 dBFS : refLevel = 1 / sqrt(2)
     const float LevelZeroOffset = 1.5849e-13f;
+
+    /// <summary>
+    /// Возвращает пиковое значение в спектре сигнала.
+    /// </summary>
+    /// <param name="values">Сигнал.</param>
+    /// <param name="frequency">Несущая частота.</param>
+    /// <param name="samplingRate">Частота дискретизации сигнала.</param>
+    /// <returns></returns>
+    public static ComplexFloat ComplexPeak(this ReadOnlySpan<float> values, float frequency, float samplingRate)
+    {
+        const int fftSize = 1024;
+        
+        ComplexFloat[] complexValues = ComplexFloat.FloatToComplex(values, fftSize);
+        ComplexFloat[] spectrum = FFT.ForwardTransform(complexValues);
+        
+        int peakIndex = Mathf.RoundToInt(frequency / samplingRate * fftSize);
+        return spectrum[peakIndex];
+    }
     
     /// <summary>
     /// Возвращает пиковое значение переданного сигнала.

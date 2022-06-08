@@ -76,7 +76,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             _outputDeviceGenerator.StartGeneration(
                 generalSettings.OutputDeviceIndex,
                 CurrentFrequency,
-                generalSettings.SampleRate
+                generalSettings.SamplingRate
             );
             _inputDeviceListener.StartListening(
                 generalSettings.InputDeviceIndex,
@@ -106,7 +106,9 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                     generalSettings.EquivalenceResistance,
                     channelsCalibrator.LineInputImpedance,
                     channelsCalibrator.GroundImpedance,
-                    TestComponentType.Capacitance
+                    TestComponentType.Capacitance,
+                    CurrentFrequency,
+                    generalSettings.SamplingRate
                 );
 
                 if (float.IsNaN(computedImpedance.Magnitude) || float.IsNaN(computedImpedance.AngleInRad))

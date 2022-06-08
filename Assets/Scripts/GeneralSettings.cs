@@ -42,7 +42,7 @@ public sealed class GeneralSettings : ScriptableObject
     [SerializeField, Range(0f, 1f)] private float outputDeviceVolume = 1f;
     
     [Header("Measurement configuration")]
-    [SerializeField] private SamplingRatePreset sampleRate = SamplingRatePreset.Default;
+    [SerializeField] private SamplingRatePreset samplingRate = SamplingRatePreset.Default;
     [SerializeField] private ReferenceChannel inputReference = ReferenceChannel.Left;
     [SerializeField, Min(0f)] private float equivalenceResistance = 100f;
     [SerializeField, Min(0f)] private float calibrationFrequency = 1000f;
@@ -76,10 +76,10 @@ public sealed class GeneralSettings : ScriptableObject
         set => outputDeviceVolume = Mathf.Clamp01(value);
     }
 
-    public int SampleRate
+    public int SamplingRate
     {
-        get => (int) sampleRate;
-        set => sampleRate = (SamplingRatePreset) value;
+        get => (int) samplingRate;
+        set => samplingRate = (SamplingRatePreset) value;
     }
     
     public ReferenceChannel InputReferenceChannel

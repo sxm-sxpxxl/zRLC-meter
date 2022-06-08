@@ -15,13 +15,14 @@ MonoBehaviour:
   inputDeviceIndex: 0
   outputDeviceIndex: 2
   outputDeviceVolume: 1
-  sampleRate: 48000
+  samplingRate: 48000
   inputReference: 0
   equivalenceResistance: 100
   calibrationFrequency: 1000
   transientTimeInMs: 300
-  lowCutOffFrequency: 200
+  lowCutOffFrequency: 1000
   highCutOffFrequency: 1000
   frequencyIncrement: 24
   retryTimeoutInSec: 1
   averagingIterations: 100
+  signalIntervalsCount: 3

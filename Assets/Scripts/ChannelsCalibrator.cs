@@ -41,7 +41,8 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         StartCoroutine(AverageCalibrationCoroutine(result =>
         {
             _lineInputImpedance = result;
-            Debug.Log($"LineIn impedance: <color=yellow>Magnitude</color> = {_lineInputImpedance.Value.Magnitude} Ohm " +
+            Debug.Log($"LineIn impedance: <color=yellow>{_lineInputImpedance.Value.real} + {_lineInputImpedance.Value.imag}j</color> " +
+                      $"| <color=yellow>Magnitude</color> = {_lineInputImpedance.Value.Magnitude} Ohm " +
                       $"| <color=yellow>Phase</color> = {_lineInputImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
 
             if (_lineInputImpedance.Value.Magnitude < MinLineInputImpedanceMagnitude)
@@ -61,7 +62,8 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         StartCoroutine(AverageCalibrationCoroutine(result =>
         {
             _groundImpedance = result;
-            Debug.Log($"Ground impedance: <color=yellow>Magnitude</color> = {_groundImpedance.Value.Magnitude} Ohm " +
+            Debug.Log($"Ground impedance: <color=yellow>{_groundImpedance.Value.real} + {_groundImpedance.Value.imag}j</color> " +
+                      $"| <color=yellow>Magnitude</color> = {_groundImpedance.Value.Magnitude} Ohm " +
                       $"| <color=yellow>Phase</color> = {_groundImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
             
             if (_groundImpedance.Value.Magnitude > MaxGroundImpedanceMagnitude)
@@ -99,7 +101,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
             yield break;
         }
         
-        outputDeviceGenerator.StartGeneration(generalSettings.OutputDeviceIndex, generalSettings.CalibrationFrequency, generalSettings.SampleRate);
+        outputDeviceGenerator.StartGeneration(generalSettings.OutputDeviceIndex, generalSettings.CalibrationFrequency, generalSettings.SamplingRate);
         inputDeviceListener.StartListening(generalSettings.InputDeviceIndex, generalSettings.InputOutputChannelOffsets);
 
         yield return new WaitForSecondsRealtime(generalSettings.TransientTimeInMs.ConvertToNormal(fromMetric: Metric.Milli));
@@ -110,8 +112,8 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         for (int i = 0; i < generalSettings.AveragingIterations;)
         {
             if (inputDeviceListener.TryGetAndReleaseFilledSamplesByIntervals(
-                frequency: generalSettings.CalibrationFrequency,
-                intervalsCount: generalSettings.SignalIntervalsCount,
+                generalSettings.CalibrationFrequency,
+                generalSettings.SignalIntervalsCount,
                 out ReadOnlySpan<float> inputDataSamples,
                 out ReadOnlySpan<float> inputShiftDataSamples,
                 out ReadOnlySpan<float> outputDataSamples
@@ -121,7 +123,13 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                 continue;
             }
 
-            ComplexFloat computedImpedance = ZRLCHelper.ComputeImpedance(inputDataSamples, outputDataSamples, generalSettings.EquivalenceResistance);
+            ComplexFloat computedImpedance = ZRLCHelper.ComputeImpedance(
+                inputDataSamples,
+                outputDataSamples,
+                generalSettings.EquivalenceResistance,
+                generalSettings.CalibrationFrequency,
+                generalSettings.SamplingRate
+            );
 
             if (float.IsNaN(computedImpedance.Magnitude) || float.IsNaN(computedImpedance.AngleInRad))
             {
