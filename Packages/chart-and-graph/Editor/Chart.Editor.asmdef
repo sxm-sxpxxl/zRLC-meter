@@ -1,0 +1,16 @@
+{
+    "name": "Chart.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:1ebb771edbf34a74ab5a5f126407b28b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
