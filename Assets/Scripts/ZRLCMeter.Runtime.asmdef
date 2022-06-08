@@ -2,6 +2,7 @@
     "name": "zRLCMeter.Runtime",
     "rootNamespace": "",
     "references": [
+        "GUID:3de88c88fbbb8f944b9210d496af9762",
         "GUID:96f16d0027c1d4b4ab4cf5ebde4e1089",
         "GUID:1ebb771edbf34a74ab5a5f126407b28b",
         "GUID:cab61b0bb4f430f48b951229c5c3bd75",
