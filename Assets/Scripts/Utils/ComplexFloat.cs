@@ -14,6 +14,9 @@ public struct ComplexFloat
     public float Magnitude => Mathf.Sqrt(real * real + imag * imag);
     public float AngleInRad => Mathf.Atan2(imag, real);
 
+    public ComplexFloat AsReal => new ComplexFloat(real, 0f);
+    public ComplexFloat AsImag => new ComplexFloat(0f, imag);
+
     public ComplexFloat(float real, float imag)
     {
         this.real = real;

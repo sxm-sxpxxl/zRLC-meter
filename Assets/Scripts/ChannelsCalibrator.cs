@@ -61,7 +61,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         
         StartCoroutine(AverageCalibrationCoroutine(result =>
         {
-            _groundImpedance = result;
+            _groundImpedance = result.AsReal;
             Debug.Log($"Ground impedance: <color=yellow>{_groundImpedance.Value.real} + {_groundImpedance.Value.imag}j</color> " +
                       $"| <color=yellow>Magnitude</color> = {_groundImpedance.Value.Magnitude} Ohm " +
                       $"| <color=yellow>Phase</color> = {_groundImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
