@@ -76,24 +76,21 @@ public sealed class InputDeviceListener : SingletonBehaviour<InputDeviceListener
         float frequency,
         int intervalsCount,
         out ReadOnlySpan<float> inputFilledSamplesByIntervals,
-        out ReadOnlySpan<float> inputShiftFilledSamplesByIntervals,
         out ReadOnlySpan<float> outputFilledSamplesByIntervals
     )
     {
         int samplesCountPerInterval = Mathf.CeilToInt(SampleRate / frequency);
-        int samplesCountPerQuarterInterval = Mathf.CeilToInt(samplesCountPerInterval / 4f);
         int totalSamplesCount = samplesCountPerInterval * intervalsCount;
 
         if (_lastDataFilledIndex < totalSamplesCount)
         {
-            inputFilledSamplesByIntervals = inputShiftFilledSamplesByIntervals = outputFilledSamplesByIntervals = null;
+            inputFilledSamplesByIntervals = outputFilledSamplesByIntervals = null;
             return false;
         }
 
         _lastDataFilledIndex = 0;
         
         inputFilledSamplesByIntervals = _inputDataSamples.GetSubArray(0, totalSamplesCount).GetReadOnlySpan();
-        inputShiftFilledSamplesByIntervals = _inputDataSamples.GetSubArray(samplesCountPerQuarterInterval, totalSamplesCount).GetReadOnlySpan();
         outputFilledSamplesByIntervals = _outputDataSamples.GetSubArray(0, totalSamplesCount).GetReadOnlySpan();
         return true;
     }

@@ -36,16 +36,16 @@ public sealed class ChannelsCalibrator : MonoBehaviour
 
     public void OpenCalibrate()
     {
-        const float MinLineInputImpedanceMagnitude = 1e4f;
+        const float minLineInputImpedanceMagnitude = 1e4f;
         
-        StartCoroutine(AverageCalibrationCoroutine(result =>
+        StartCoroutine(CalibrationCoroutine(result =>
         {
             _lineInputImpedance = result;
             Debug.Log($"LineIn impedance: <color=yellow>{_lineInputImpedance.Value.real} + {_lineInputImpedance.Value.imag}j</color> " +
                       $"| <color=yellow>Magnitude</color> = {_lineInputImpedance.Value.Magnitude} Ohm " +
                       $"| <color=yellow>Phase</color> = {_lineInputImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
 
-            if (_lineInputImpedance.Value.Magnitude < MinLineInputImpedanceMagnitude)
+            if (_lineInputImpedance.Value.Magnitude < minLineInputImpedanceMagnitude)
             {
                 OnCalibrationErrorOccurred.Invoke($"LineIn impedance is measured as too small ({_lineInputImpedance.Value.Magnitude} Ohm). Check your circuit and try again.");
                 return;
@@ -57,16 +57,16 @@ public sealed class ChannelsCalibrator : MonoBehaviour
     
     public void ShortCalibrate()
     {
-        const float MaxGroundImpedanceMagnitude = 1f;
+        const float maxGroundImpedanceMagnitude = 1f;
         
-        StartCoroutine(AverageCalibrationCoroutine(result =>
+        StartCoroutine(CalibrationCoroutine(result =>
         {
             _groundImpedance = result.AsReal;
             Debug.Log($"Ground impedance: <color=yellow>{_groundImpedance.Value.real} + {_groundImpedance.Value.imag}j</color> " +
                       $"| <color=yellow>Magnitude</color> = {_groundImpedance.Value.Magnitude} Ohm " +
                       $"| <color=yellow>Phase</color> = {_groundImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
             
-            if (_groundImpedance.Value.Magnitude > MaxGroundImpedanceMagnitude)
+            if (_groundImpedance.Value.Magnitude > maxGroundImpedanceMagnitude)
             {
                 OnCalibrationErrorOccurred.Invoke($"Ground impedance is measured as too big ({_groundImpedance.Value.Magnitude} Ohm). Check your circuit and try again.");
                 return;
@@ -74,20 +74,6 @@ public sealed class ChannelsCalibrator : MonoBehaviour
 
             OnCalibrationFinished.Invoke();
         }));
-    }
-
-    private IEnumerator AverageCalibrationCoroutine(Action<ComplexFloat> getAverageCalibratedImpedanceCallback)
-    {
-        int iterations = Mathf.CeilToInt(generalSettings.AveragingIterations / 20f);
-        ComplexFloat averageCalibratedImpedance = ComplexFloat.Zero;
-
-        for (int i = 0; i < iterations; i++)
-        {
-            yield return StartCoroutine(CalibrationCoroutine(result => averageCalibratedImpedance += result));
-        }
-
-        averageCalibratedImpedance /= iterations;
-        getAverageCalibratedImpedanceCallback.Invoke(averageCalibratedImpedance);
     }
 
     private IEnumerator CalibrationCoroutine(Action<ComplexFloat> getCalibratedImpedanceCallback)
@@ -115,7 +101,6 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                 generalSettings.CalibrationFrequency,
                 generalSettings.SignalIntervalsCount,
                 out ReadOnlySpan<float> inputDataSamples,
-                out ReadOnlySpan<float> inputShiftDataSamples,
                 out ReadOnlySpan<float> outputDataSamples
             ) == false)
             {

@@ -31,7 +31,7 @@ public sealed class MeasuringResultView : MonoBehaviour
         inductanceButton.onClick.AddListener(OnInductanceButtonClick);
         impedanceChartFeedView.OnImpedanceSelected += OnImpedanceSelected;
         
-        frequencyValueText.text = activeResistanceValueText.text = capacitanceValueText.text = inductanceValueText.text = "-";
+        ResetResults();
     }
 
     private void OnDestroy()
@@ -39,6 +39,11 @@ public sealed class MeasuringResultView : MonoBehaviour
         capacitanceButton.onClick.RemoveListener(OnCapacitanceButtonClick);
         inductanceButton.onClick.RemoveListener(OnInductanceButtonClick);
         impedanceChartFeedView.OnImpedanceSelected -= OnImpedanceSelected;
+    }
+
+    public void ResetResults()
+    {
+        frequencyValueText.text = activeResistanceValueText.text = capacitanceValueText.text = inductanceValueText.text = "-";
     }
 
     private void OnInductanceButtonClick()

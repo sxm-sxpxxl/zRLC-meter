@@ -1,15 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public enum Metric
 {
+    Pico   = -4,
     Nano   = -3,
     Micro  = -2,
     Milli  = -1,
     Normal = 0,
     Kilo   = +1,
     Mega   = +2,
-    Giga   = +3
+    Giga   = +3,
+    Tera   = +4
 }
 
 /// <summary>
@@ -21,6 +25,7 @@ public static class MetricExtensions
 
     private static readonly Dictionary<Metric, string> PrefixMetricMap = new Dictionary<Metric, string>
     {
+        { Metric.Pico,   "p" },
         { Metric.Nano,   "n" },
         { Metric.Micro,  "μ" },
         { Metric.Milli,  "m" },
@@ -28,7 +33,10 @@ public static class MetricExtensions
         { Metric.Kilo,   "k" },
         { Metric.Mega,   "M" },
         { Metric.Giga,   "G" },
+        { Metric.Tera,   "T" }
     };
+    
+    private static readonly int[] AvailableMetrics = Enum.GetValues(typeof(Metric)).Cast<int>().ToArray();
     
     /// <summary>
     /// Преобразовать значение из исходной метрики (например, значение 100 с метрикой 'm' понимается как 100m)
@@ -73,7 +81,7 @@ public static class MetricExtensions
 
     private static Metric GetDesiredMetric(this float value)
     {
-        int nearestMetricNumber = Mathf.FloorToInt(Mathf.Log(value, MetricStep));
-        return (Metric) Mathf.Clamp(nearestMetricNumber, (int) Metric.Nano, (int) Metric.Giga);
+        int nearestMetricNumber = Mathf.FloorToInt(Mathf.Log(Mathf.Abs(value), MetricStep));
+        return (Metric) Mathf.Clamp(nearestMetricNumber, AvailableMetrics.Min(), AvailableMetrics.Max());
     }
 }

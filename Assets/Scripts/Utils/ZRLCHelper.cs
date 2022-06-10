@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 
-// todo: refactoring
 /// <summary>
 /// Рассчитывает импеданс (амплитуду и фазу) и RLC параметры импеданса.
 /// </summary>
@@ -15,7 +14,8 @@ public static class ZRLCHelper
     /// <param name="equivalenceResistance">Эквивалентное сопротивление.</param>
     /// <param name="lineInputImpedance">Входной импеданс звуковой карты.</param>
     /// <param name="groundImpedance">Импеданс в цепи с тестовым компонентом.</param>
-    /// <param name="testComponentType">Тип тестового компонента.</param>
+    /// <param name="frequency">Частота сгенерированного сигнала.</param>
+    /// <param name="samplingRate">Частота дискретизации сигнала.</param>
     /// <returns></returns>
     public static ComplexFloat ComputeTestImpedance(
         ReadOnlySpan<float> inputSignalSamples,
@@ -23,28 +23,27 @@ public static class ZRLCHelper
         float equivalenceResistance,
         ComplexFloat lineInputImpedance,
         ComplexFloat groundImpedance,
-        TestComponentType testComponentType,
         float frequency,
         float samplingRate
     )
     {
-        var inPeak = inputSignalSamples.ComplexPeak(frequency, samplingRate);
-        var outPeak = outputSignalSamples.ComplexPeak(frequency, samplingRate);;
-        
-        var rref = equivalenceResistance;
         var zr = lineInputImpedance;
         var zg = groundImpedance;
+        
+        ComplexFloat inPeak = inputSignalSamples.ComplexPeak(frequency, samplingRate);
+        ComplexFloat outPeak = outputSignalSamples.ComplexPeak(frequency, samplingRate);
 
-        ComplexFloat testImpedance = outPeak * zr * rref / (zr * (inPeak - outPeak) - outPeak * rref) - zg;
-        return testImpedance;
+        return outPeak * zr * equivalenceResistance / (zr * (inPeak - outPeak) - outPeak * equivalenceResistance) - zg;
     }
-    
+
     /// <summary>
     /// Рассчитать импеданс.
     /// </summary>
     /// <param name="inputSignalSamples">Входной сигнал.</param>
     /// <param name="outputSignalSamples">Выходной сигнал.</param>
     /// <param name="equivalenceResistance">Эквивалентное сопротивление.</param>
+    /// <param name="frequency">Частота сгенерированного сигнала.</param>
+    /// <param name="samplingRate">Частота дискретизации сигнала.</param>
     /// <returns></returns>
     public static ComplexFloat ComputeImpedance(
         ReadOnlySpan<float> inputSignalSamples,
@@ -73,7 +72,7 @@ public static class ZRLCHelper
     /// <param name="data">Результат измерения импеданса.</param>
     /// <returns></returns>
     public static float ComputeCapacitance(ImpedanceMeasureData data) =>
-        -1f / (2f * Mathf.PI * data.frequency * data.impedance.imag);
+        data.impedance.imag < 0f ? -1f / (2f * Mathf.PI * data.frequency * data.impedance.imag) : 0f;
 
     /// <summary>
     /// Рассчитать индуктивность в контуре RL.
@@ -81,5 +80,5 @@ public static class ZRLCHelper
     /// <param name="data">Результат измерения импеданса.</param>
     /// <returns></returns>
     public static float ComputeInductance(ImpedanceMeasureData data) =>
-        data.impedance.imag / (2f * Mathf.PI * data.frequency);
+        data.impedance.imag > 0f ? data.impedance.imag / (2f * Mathf.PI * data.frequency) : 0f;
 }

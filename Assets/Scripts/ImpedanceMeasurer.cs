@@ -89,10 +89,9 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             for (int i = 0; i < generalSettings.AveragingIterations;)
             {
                 if (_inputDeviceListener.TryGetAndReleaseFilledSamplesByIntervals(
-                    frequency: CurrentFrequency,
-                    intervalsCount: generalSettings.SignalIntervalsCount,
+                    CurrentFrequency,
+                    generalSettings.SignalIntervalsCount,
                     out ReadOnlySpan<float> inputDataSamples,
-                    out ReadOnlySpan<float> inputShiftDataSamples,
                     out ReadOnlySpan<float> outputDataSamples
                 ) == false)
                 {
@@ -106,7 +105,6 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                     generalSettings.EquivalenceResistance,
                     channelsCalibrator.LineInputImpedance,
                     channelsCalibrator.GroundImpedance,
-                    TestComponentType.Capacitance,
                     CurrentFrequency,
                     generalSettings.SamplingRate
                 );
