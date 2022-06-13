@@ -93,7 +93,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         yield return new WaitForSecondsRealtime(generalSettings.TransientTimeInMs.ConvertToNormal(fromMetric: Metric.Milli));
         
         ComplexFloat calibratedImpedance = ComplexFloat.Zero;
-        float elapsedRetryTimeoutInSec = 0f;
+        float elapsedRetryTimeoutInSec = 0f, inputChannelRms = 0f, outputChannelRms = 0f;
         
         for (int i = 0; i < generalSettings.AveragingIterations;)
         {
@@ -132,6 +132,9 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                 continue;
             }
 
+            inputChannelRms += inputDataSamples.Rms();
+            outputChannelRms += outputDataSamples.Rms();
+            
             calibratedImpedance += computedImpedance;
             i++;
             
@@ -141,6 +144,12 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         
         outputDeviceGenerator.StopGeneration();
         inputDeviceListener.StopListening();
+
+        inputChannelRms /= generalSettings.AveragingIterations;
+        outputChannelRms /= generalSettings.AveragingIterations;
+        
+        Debug.Log($"<color=yellow>Input channel RMS: </color> {inputChannelRms} V  " +
+                  $"<color=yellow>Output channel RMS: </color> {outputChannelRms} V");
         
         calibratedImpedance /= generalSettings.AveragingIterations;
         getCalibratedImpedanceCallback.Invoke(calibratedImpedance);

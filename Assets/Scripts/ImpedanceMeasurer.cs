@@ -86,6 +86,8 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             yield return new WaitForSecondsRealtime(generalSettings.TransientTimeInMs.ConvertToNormal(fromMetric: Metric.Milli));
 
             ComplexFloat testImpedance = ComplexFloat.Zero;
+            float inputChannelRms = 0f, outputChannelRms = 0f;
+            
             for (int i = 0; i < generalSettings.AveragingIterations;)
             {
                 if (_inputDeviceListener.TryGetAndReleaseFilledSamplesByIntervals(
@@ -123,14 +125,22 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                     continue;
                 }
 
+                inputChannelRms += inputDataSamples.Rms();
+                outputChannelRms += outputDataSamples.Rms();
+                
                 testImpedance += computedImpedance;
                 i++;
 
                 elapsedRetryTimeoutInSec = 0f;
                 yield return null;
             }
+            
+            inputChannelRms /= generalSettings.AveragingIterations;
+            outputChannelRms /= generalSettings.AveragingIterations;
+            Debug.Log($"<color=yellow>Input channel RMS: </color> {inputChannelRms} V  " +
+                      $"<color=yellow>Output channel RMS: </color> {outputChannelRms} V");
+            
             testImpedance /= generalSettings.AveragingIterations;
-
             Debug.Log($"f: <color=yellow>{CurrentFrequency} Hz</color>  " +
                       $"|Z|: <color=green>{testImpedance.Magnitude} Ohm</color>  " +
                       $"φ: <color=red>{testImpedance.AngleInRad * Mathf.Rad2Deg}°</color>");
