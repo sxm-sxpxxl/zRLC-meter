@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using SoundIO.SimpleDriver;
 using UnityEngine;
@@ -25,12 +26,13 @@ public sealed class IOHandlerView : MonoBehaviour
     [SerializeField] private Text inputChannelCountText;
 
     private List<float> _outputDeviceVolumes;
+    private List<int> _sharedInputDeviceIndexMap, _sharedOutputDeviceIndexMap;
     
     private void Start()
     {
         CreateDeviceOptionsFor(outputDeviceDropdown, DeviceType.Output, DeviceDriver.OutputDeviceCount);
         outputDeviceDropdown.onValueChanged.AddListener(SetOutputDevice);
-        outputDeviceDropdown.value = DeviceDriver.DefaultOutputDeviceIndex;
+        outputDeviceDropdown.value = _sharedOutputDeviceIndexMap.FindIndex(0, i => i == DeviceDriver.DefaultOutputDeviceIndex);
         SetOutputDevice(outputDeviceDropdown.value);
 
         CreateOutputVolumeOptionsFor(outputVolumeDropdown);
@@ -39,7 +41,7 @@ public sealed class IOHandlerView : MonoBehaviour
         
         CreateDeviceOptionsFor(inputDeviceDropdown, DeviceType.Input, DeviceDriver.InputDeviceCount);
         inputDeviceDropdown.onValueChanged.AddListener(SetInputDevice);
-        inputDeviceDropdown.value = DeviceDriver.DefaultInputDeviceIndex;
+        inputDeviceDropdown.value = _sharedOutputDeviceIndexMap.FindIndex(0, i => i == DeviceDriver.DefaultInputDeviceIndex);
         SetInputDevice(inputDeviceDropdown.value);
         
         inputReferencePointDropdown.onValueChanged.AddListener(SetInputReferencePoint);
@@ -65,9 +67,9 @@ public sealed class IOHandlerView : MonoBehaviour
         volumeDropdown.RefreshShownValue();
     }
 
-    private void SetOutputDevice(int deviceIndex)
+    private void SetOutputDevice(int dropdownIndex)
     {
-        generalSettings.OutputDeviceIndex = deviceIndex;
+        generalSettings.OutputDeviceIndex = _sharedOutputDeviceIndexMap[dropdownIndex];
     }
     
     private void SetOutputDeviceVolume(int outputDeviceVolumeIndex)
@@ -75,11 +77,11 @@ public sealed class IOHandlerView : MonoBehaviour
         generalSettings.OutputDeviceVolume = _outputDeviceVolumes[outputDeviceVolumeIndex].InverseLevel(refLevel: 1f);
     }
     
-    private void SetInputDevice(int deviceIndex)
+    private void SetInputDevice(int dropdownIndex)
     {
-        generalSettings.InputDeviceIndex = deviceIndex;
+        generalSettings.InputDeviceIndex = _sharedInputDeviceIndexMap[dropdownIndex];
 
-        int inputChannelCount = DeviceDriver.GetDeviceChannelCount(deviceIndex, DeviceType.Input);
+        int inputChannelCount = DeviceDriver.GetDeviceChannelCount(dropdownIndex, DeviceType.Input);
         inputChannelCountText.text = inputChannelCount.ToString();
         inputChannelCountText.color = inputChannelCount == 2 ? Color.green : Color.red;
     }
@@ -91,9 +93,23 @@ public sealed class IOHandlerView : MonoBehaviour
     
     private void CreateDeviceOptionsFor(Dropdown deviceDropdown, DeviceType deviceType, int deviceCount)
     {
-        deviceDropdown.options = Enumerable.Range(0, deviceCount)
-            // TODO: fix it
-            // .Where(i => DeviceDriver.IsDeviceRaw(i, deviceType) == false)
+        switch (deviceType)
+        {
+            case DeviceType.Input:
+                _sharedInputDeviceIndexMap = Enumerable.Range(0, deviceCount)
+                    .Where(i => DeviceDriver.IsDeviceRaw(i, deviceType) == false)
+                    .ToList();
+                break;
+            case DeviceType.Output:
+                _sharedOutputDeviceIndexMap = Enumerable.Range(0, deviceCount)
+                    .Where(i => DeviceDriver.IsDeviceRaw(i, deviceType) == false)
+                    .ToList();
+                break;
+        }
+
+        var deviceIndexMap = deviceType == DeviceType.Input ? _sharedInputDeviceIndexMap : _sharedOutputDeviceIndexMap;
+
+        deviceDropdown.options = deviceIndexMap
             .Select(i => DeviceDriver.GetDeviceName(i, deviceType))
             .Select(name => new Dropdown.OptionData(text: name))
             .ToList();
