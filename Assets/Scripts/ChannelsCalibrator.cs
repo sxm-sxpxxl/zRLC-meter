@@ -36,7 +36,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
 
     public void OpenCalibrate()
     {
-        const float minLineInputImpedanceMagnitude = 1e4f;
+        const float minLineInputImpedanceMagnitude = 1f;
         
         StartCoroutine(CalibrationCoroutine(result =>
         {
