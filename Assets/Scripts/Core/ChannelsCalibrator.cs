@@ -9,7 +9,8 @@ using UnityEngine.Assertions;
 [DisallowMultipleComponent]
 public sealed class ChannelsCalibrator : MonoBehaviour
 {
-    public event Action OnCalibrationFinished = delegate { };
+    public event Action<ComplexFloat> OnOpenCalibrationFinished = delegate { };
+    public event Action<ComplexFloat> OnShortCalibrationFinished = delegate { };
     public event Action<string> OnCalibrationErrorOccurred = delegate { };
 
     [Header("Dependencies")]
@@ -51,7 +52,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                 return;
             }
             
-            OnCalibrationFinished.Invoke();
+            OnOpenCalibrationFinished.Invoke(_lineInputImpedance.Value);
         }));
     }
     
@@ -72,7 +73,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                 return;
             }
 
-            OnCalibrationFinished.Invoke();
+            OnShortCalibrationFinished.Invoke(_groundImpedance.Value);
         }));
     }
 
@@ -111,7 +112,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
             ComplexFloat computedImpedance = ZRLCHelper.ComputeImpedance(
                 inputDataSamples,
                 outputDataSamples,
-                generalSettings.EquivalenceResistance,
+                generalSettings.ReferenceResistance,
                 generalSettings.CalibrationFrequency,
                 generalSettings.SamplingRate
             );

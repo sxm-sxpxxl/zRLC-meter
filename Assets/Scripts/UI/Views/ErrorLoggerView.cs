@@ -19,7 +19,8 @@ public sealed class ErrorLoggerView : MonoBehaviour
         impedanceMeasurer.OnImpedanceMeasuringErrorOccurred += LogErrorWith;
         impedanceMeasurer.OnImpedanceMeasuringFinished += ResetLogError;
         channelsCalibrator.OnCalibrationErrorOccurred += LogErrorWith;
-        channelsCalibrator.OnCalibrationFinished += ResetLogError;
+        channelsCalibrator.OnOpenCalibrationFinished += ResetLogError;
+        channelsCalibrator.OnShortCalibrationFinished += ResetLogError;
         
         LogErrorWith("-");
     }
@@ -29,7 +30,8 @@ public sealed class ErrorLoggerView : MonoBehaviour
         impedanceMeasurer.OnImpedanceMeasuringErrorOccurred -= LogErrorWith;
         impedanceMeasurer.OnImpedanceMeasuringFinished -= ResetLogError;
         channelsCalibrator.OnCalibrationErrorOccurred -= LogErrorWith;
-        channelsCalibrator.OnCalibrationFinished -= ResetLogError;
+        channelsCalibrator.OnOpenCalibrationFinished -= ResetLogError;
+        channelsCalibrator.OnShortCalibrationFinished -= ResetLogError;
     }
 
     private void LogErrorWith(string message)
@@ -37,7 +39,7 @@ public sealed class ErrorLoggerView : MonoBehaviour
         errorMessageText.text = message;
     }
 
-    private void ResetLogError(float _) => ResetLogError();
+    private void ResetLogError(ComplexFloat _) => ResetLogError();
     
     private void ResetLogError()
     {

@@ -44,7 +44,7 @@ public sealed class GeneralSettings : ScriptableObject
     [Header("Measurement configuration")]
     [SerializeField] private SamplingRatePreset samplingRate = SamplingRatePreset.Default;
     [SerializeField] private ReferenceChannel inputReference = ReferenceChannel.Left;
-    [SerializeField, Min(0f)] private float equivalenceResistance = 100f;
+    [SerializeField, Min(0f)] private float referenceResistance = 100f;
     [SerializeField, Min(0f)] private float calibrationFrequency = 1000f;
     
     [Header("Frequency range configuration")]
@@ -84,6 +84,7 @@ public sealed class GeneralSettings : ScriptableObject
     
     public ReferenceChannel InputReferenceChannel
     {
+        get => inputReference;
         set => inputReference = value;
     }
 
@@ -92,10 +93,10 @@ public sealed class GeneralSettings : ScriptableObject
         get => inputReference == ReferenceChannel.Left ? (0, 1) : (1, 0);
     }
 
-    public float EquivalenceResistance
+    public float ReferenceResistance
     {
-        get => equivalenceResistance;
-        set => equivalenceResistance = Mathf.Max(value, 0f);
+        get => referenceResistance;
+        set => referenceResistance = Mathf.Max(value, 0f);
     }
 
     public float CalibrationFrequency

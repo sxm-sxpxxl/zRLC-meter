@@ -1,31 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using SoundIO.SimpleDriver;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
+using SoundIO.SimpleDriver;
 using DeviceType = SoundIO.SimpleDriver.DeviceType;
 
 /// <summary>
 /// Обрабатывает UI элементы, настраивающие аудио-устройства ввода-вывода.
 /// </summary>
 [DisallowMultipleComponent]
-public sealed class IOHandlerView : MonoBehaviour
+public sealed class SoundcardSetupView : MonoBehaviour
 {
     [Header("Dependencies")]
     [SerializeField] private GeneralSettings generalSettings;
     
-    [Header("Views")]
-    [SerializeField] private Dropdown outputDeviceDropdown;
-    [SerializeField] private Dropdown outputVolumeDropdown;
-    [SerializeField, Range(1, 80)] private int volumeRangeCount = 12;
-    
-    [Space]
-    [SerializeField] private Dropdown inputDeviceDropdown;
-    [SerializeField] private Dropdown inputReferencePointDropdown;
-    [SerializeField] private Text inputChannelCountText;
+    [Header("Soundcard Setup")]
+    [SerializeField] private TMP_Dropdown outputDeviceDropdown;
+    [SerializeField] private TMP_Dropdown inputDeviceDropdown;
+    [SerializeField] private TMP_Text inputChannelCountText;
 
-    private List<float> _outputDeviceVolumes;
     private List<int> _sharedInputDeviceIndexMap, _sharedOutputDeviceIndexMap;
     
     private void Start()
@@ -35,46 +28,21 @@ public sealed class IOHandlerView : MonoBehaviour
         outputDeviceDropdown.value = _sharedOutputDeviceIndexMap.FindIndex(0, i => i == DeviceDriver.DefaultOutputDeviceIndex);
         SetOutputDevice(outputDeviceDropdown.value);
 
-        CreateOutputVolumeOptionsFor(outputVolumeDropdown);
-        outputVolumeDropdown.onValueChanged.AddListener(SetOutputDeviceVolume);
-        SetOutputDeviceVolume(outputVolumeDropdown.value);
-        
         CreateDeviceOptionsFor(inputDeviceDropdown, DeviceType.Input, DeviceDriver.InputDeviceCount);
         inputDeviceDropdown.onValueChanged.AddListener(SetInputDevice);
         inputDeviceDropdown.value = _sharedOutputDeviceIndexMap.FindIndex(0, i => i == DeviceDriver.DefaultInputDeviceIndex);
         SetInputDevice(inputDeviceDropdown.value);
-        
-        inputReferencePointDropdown.onValueChanged.AddListener(SetInputReferencePoint);
     }
     
     private void OnDestroy()
     {
         outputDeviceDropdown.onValueChanged.RemoveListener(SetOutputDevice);
-        outputVolumeDropdown.onValueChanged.RemoveListener(SetOutputDeviceVolume);
         inputDeviceDropdown.onValueChanged.RemoveListener(SetInputDevice);
     }
-
-    private void CreateOutputVolumeOptionsFor(Dropdown volumeDropdown)
-    {
-        _outputDeviceVolumes = Enumerable.Range(0, volumeRangeCount + 1)
-            .Select(i => (float)-i)
-            .ToList();
-        
-        volumeDropdown.options = _outputDeviceVolumes
-            .Select(i => new Dropdown.OptionData(text: $"{i} dB"))
-            .ToList();
-        
-        volumeDropdown.RefreshShownValue();
-    }
-
+    
     private void SetOutputDevice(int dropdownIndex)
     {
         generalSettings.OutputDeviceIndex = _sharedOutputDeviceIndexMap[dropdownIndex];
-    }
-    
-    private void SetOutputDeviceVolume(int outputDeviceVolumeIndex)
-    {
-        generalSettings.OutputDeviceVolume = _outputDeviceVolumes[outputDeviceVolumeIndex].InverseLevel(refLevel: 1f);
     }
     
     private void SetInputDevice(int dropdownIndex)
@@ -82,16 +50,10 @@ public sealed class IOHandlerView : MonoBehaviour
         generalSettings.InputDeviceIndex = _sharedInputDeviceIndexMap[dropdownIndex];
 
         int inputChannelCount = DeviceDriver.GetDeviceChannelCount(dropdownIndex, DeviceType.Input);
-        inputChannelCountText.text = inputChannelCount.ToString();
-        inputChannelCountText.color = inputChannelCount == 2 ? Color.green : Color.red;
+        inputChannelCountText.text = $"Channels: {inputChannelCount}";
     }
     
-    private void SetInputReferencePoint(int inputReferencePoint)
-    {
-        generalSettings.InputReferenceChannel = (ReferenceChannel) inputReferencePoint;
-    }
-    
-    private void CreateDeviceOptionsFor(Dropdown deviceDropdown, DeviceType deviceType, int deviceCount)
+    private void CreateDeviceOptionsFor(TMP_Dropdown deviceDropdown, DeviceType deviceType, int deviceCount)
     {
         switch (deviceType)
         {
@@ -111,7 +73,7 @@ public sealed class IOHandlerView : MonoBehaviour
 
         deviceDropdown.options = deviceIndexMap
             .Select(i => DeviceDriver.GetDeviceName(i, deviceType))
-            .Select(name => new Dropdown.OptionData(text: name))
+            .Select(deviceName => new TMP_Dropdown.OptionData(text: deviceName))
             .ToList();
         
         deviceDropdown.RefreshShownValue();

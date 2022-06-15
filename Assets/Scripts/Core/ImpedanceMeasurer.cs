@@ -104,7 +104,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                 ComplexFloat computedImpedance = ZRLCHelper.ComputeTestImpedance(
                     inputDataSamples,
                     outputDataSamples,
-                    generalSettings.EquivalenceResistance,
+                    generalSettings.ReferenceResistance,
                     channelsCalibrator.LineInputImpedance,
                     channelsCalibrator.GroundImpedance,
                     CurrentFrequency,

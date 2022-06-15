@@ -36,7 +36,7 @@ public sealed class GraphScreenshotSaver : MonoBehaviour
             extensions: new[] { new ExtensionFilter("Image Files", "png")}
         );
         
-        if (path.Length == 0)
+        if (string.IsNullOrEmpty(path))
         {
             return;
         }
