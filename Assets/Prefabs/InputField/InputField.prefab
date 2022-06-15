@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5790668652755413696}
   - component: {fileID: 5790668652755413703}
   m_Layer: 5
-  m_Name: Label Text (TMP)
+  m_Name: Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -266,7 +266,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3332103535632076241, guid: fc4fb844cd020f94b86807fb69465be4, type: 3}
       propertyPath: m_Name
-      value: InputField (TMP)
+      value: BaseInputField
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fc4fb844cd020f94b86807fb69465be4, type: 3}

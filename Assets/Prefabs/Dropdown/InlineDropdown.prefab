@@ -50,7 +50,7 @@ GameObject:
   - component: {fileID: 7094554102538644898}
   - component: {fileID: 7094554102538644899}
   m_Layer: 5
-  m_Name: Label (TMP)
+  m_Name: Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
