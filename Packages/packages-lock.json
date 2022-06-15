@@ -95,6 +95,12 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "procedural-ui-image": {
+      "version": "file:procedural-ui-image",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "standalone-file-browser": {
       "version": "file:standalone-file-browser",
       "depth": 0,

@@ -1,0 +1,10 @@
+{
+  "author": "Josh H",
+  "description": "Create an infinite number of basic shapes without a ton of image resources.",
+  "displayName": "procedural-ui-image",
+  "keywords": ["unity"],
+  "name": "procedural-ui-image",
+  "unity": "2017.1",
+  "unityRelease": "5f1",
+  "version": "2.2.0"
+}
