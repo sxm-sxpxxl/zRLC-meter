@@ -283,6 +283,7 @@ GameObject:
   - component: {fileID: 6296033941160657562}
   - component: {fileID: 6915240672580768514}
   - component: {fileID: 3332103535632076239}
+  - component: {fileID: 5011891728002214376}
   m_Layer: 5
   m_Name: ReadonlyBaseInputField
   m_TagString: Untagged
@@ -462,6 +463,18 @@ MonoBehaviour:
   m_isRichTextEditingAllowed: 0
   m_LineLimit: 0
   m_InputValidator: {fileID: 0}
+--- !u!114 &5011891728002214376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3332103535632076241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b839f535ac1a4f929768204f0a685c80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3332103535758264970
 GameObject:
   m_ObjectHideFlags: 0

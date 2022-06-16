@@ -187,6 +187,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selfInputField: {fileID: 5790668653856259405}
+  customRaycaster: {fileID: 580903120773247399}
   prefixText: {fileID: 5790668654183555113}
   defaultValue: 
   units: Ohm
@@ -291,6 +292,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fc4fb844cd020f94b86807fb69465be4, type: 3}
+--- !u!114 &580903120773247399 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8533578817294418213, guid: fc4fb844cd020f94b86807fb69465be4, type: 3}
+  m_PrefabInstance: {fileID: 9107005185900359810}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b839f535ac1a4f929768204f0a685c80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &5790668653856259404 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3332103535632076238, guid: fc4fb844cd020f94b86807fb69465be4, type: 3}
