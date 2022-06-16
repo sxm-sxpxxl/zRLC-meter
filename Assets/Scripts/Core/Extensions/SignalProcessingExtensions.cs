@@ -18,7 +18,7 @@ public static class SignalProcessingExtensions
     /// <returns></returns>
     public static ComplexFloat ComplexPeak(this ReadOnlySpan<float> values, float frequency, float samplingRate)
     {
-        const int fftSize = 1024;
+        const int fftSize = 4096;
         
         ComplexFloat[] complexValues = ComplexFloat.FloatToComplex(values, fftSize);
         ComplexFloat[] spectrum = FFT.ForwardTransform(complexValues);

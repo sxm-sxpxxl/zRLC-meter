@@ -24,5 +24,5 @@ MonoBehaviour:
   highCutOffFrequency: 2000
   frequencyIncrement: 24
   retryTimeoutInSec: 1
-  averagingIterations: 25
-  signalIntervalsCount: 1
+  averagingIterations: 50
+  signalIntervalsCount: 3
