@@ -85,7 +85,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             
             yield return new WaitForSecondsRealtime(generalSettings.TransientTimeInMs.ConvertToNormal(fromMetric: Metric.Milli));
 
-            ComplexFloat testImpedance = ComplexFloat.Zero;
+            ComplexFloat testImpedance = ComplexFloat.Zero, inOutRatio = ComplexFloat.Zero;
             float inputChannelRms = 0f, outputChannelRms = 0f;
             
             for (int i = 0; i < generalSettings.AveragingIterations;)
@@ -125,6 +125,10 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                     continue;
                 }
 
+                var inPeak = inputDataSamples.ComplexPeak(CurrentFrequency, generalSettings.SamplingRate);
+                var outPeak = outputDataSamples.ComplexPeak(CurrentFrequency, generalSettings.SamplingRate);
+                inOutRatio += inPeak / outPeak;
+                
                 inputChannelRms += inputDataSamples.Rms();
                 outputChannelRms += outputDataSamples.Rms();
                 
@@ -134,16 +138,22 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                 elapsedRetryTimeoutInSec = 0f;
                 yield return null;
             }
-            
+
+            inOutRatio /= generalSettings.AveragingIterations;
             inputChannelRms /= generalSettings.AveragingIterations;
             outputChannelRms /= generalSettings.AveragingIterations;
-            Debug.Log($"<color=yellow>Input channel RMS: </color> {inputChannelRms} V  " +
-                      $"<color=yellow>Output channel RMS: </color> {outputChannelRms} V");
+            Debug.Log($"><color=yellow>In RMS: </color> {inputChannelRms} V  " +
+                      $"<color=yellow>Out RMS: </color> {outputChannelRms} V  " +
+                      $"<color=yellow>In/Out RMS ratio: </color> {inputChannelRms / outputChannelRms}  " +
+                      $"<color=yellow>In/Out: </color> {inOutRatio.real} + {inOutRatio.imag}j  " +
+                      $"<color=yellow>In/Out Magnitude: </color> {inOutRatio.Magnitude}  " +
+                      $"<color=yellow>In/Out Phase: </color> {inOutRatio.AngleInRad * Mathf.Rad2Deg} °");
             
             testImpedance /= generalSettings.AveragingIterations;
-            Debug.Log($"f: <color=yellow>{CurrentFrequency} Hz</color>  " +
-                      $"|Z|: <color=green>{testImpedance.Magnitude} Ohm</color>  " +
-                      $"φ: <color=red>{testImpedance.AngleInRad * Mathf.Rad2Deg}°</color>");
+            Debug.Log($">>[f: <color=yellow>{CurrentFrequency} Hz</color>] " +
+                      $"<color=yellow>Test impedance: </color>{testImpedance.real} + {testImpedance.imag}j  " +
+                      $"<color=yellow>Magnitude</color>: {testImpedance.Magnitude} Ohm  " +
+                      $"<color=yellow>Phase</color>: {testImpedance.AngleInRad * Mathf.Rad2Deg} °");
 
             OnImpedanceMeasured.Invoke(new ImpedanceMeasureData
             {
