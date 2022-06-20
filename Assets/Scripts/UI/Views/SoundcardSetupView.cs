@@ -20,10 +20,14 @@ public sealed class SoundcardSetupView : MonoBehaviour
     
     [Header("Soundcard Setup")]
     [SerializeField] private TMP_Dropdown outputDeviceDropdown;
+    [SerializeField] private TMP_Dropdown outputVolumeDropdown;
+    [SerializeField, Range(1, 80)] private int volumeRange = 20;
+    [SerializeField, Range(1, 10)] private int volumeStep = 1;
     [SerializeField] private TMP_Dropdown inputDeviceDropdown;
     [SerializeField] private TMP_Text inputChannelCountText;
 
     private List<int> _sharedInputDeviceIndexMap, _sharedOutputDeviceIndexMap;
+    private List<float> _outputDeviceVolumes;
 
     private void Start()
     {
@@ -31,6 +35,10 @@ public sealed class SoundcardSetupView : MonoBehaviour
         outputDeviceDropdown.value = _sharedOutputDeviceIndexMap.FindIndex(0, i => i == DeviceDriver.DefaultOutputDeviceIndex);
         outputDeviceDropdown.onValueChanged.AddListener(SetOutputDevice);
         SetOutputDevice(outputDeviceDropdown.value);
+        
+        CreateOutputVolumeOptions();
+        outputVolumeDropdown.onValueChanged.AddListener(SetOutputVolume);
+        SetOutputVolume(outputVolumeDropdown.value);
 
         CreateDeviceOptionsFor(inputDeviceDropdown, DeviceType.Input, DeviceDriver.InputDeviceCount);
         inputDeviceDropdown.value = _sharedOutputDeviceIndexMap.FindIndex(0, i => i == DeviceDriver.DefaultInputDeviceIndex);
@@ -41,6 +49,7 @@ public sealed class SoundcardSetupView : MonoBehaviour
     private void OnDestroy()
     {
         outputDeviceDropdown.onValueChanged.RemoveListener(SetOutputDevice);
+        outputVolumeDropdown.onValueChanged.RemoveListener(SetOutputVolume);
         inputDeviceDropdown.onValueChanged.RemoveListener(SetInputDevice);
     }
     
@@ -48,6 +57,11 @@ public sealed class SoundcardSetupView : MonoBehaviour
     {
         generalSettings.OutputDeviceIndex = _sharedOutputDeviceIndexMap[dropdownIndex];
         OnOutputDeviceSelected.Invoke(_sharedOutputDeviceIndexMap[dropdownIndex]);
+    }
+
+    private void SetOutputVolume(int dropdownIndex)
+    {
+        generalSettings.OutputDeviceVolume = _outputDeviceVolumes[dropdownIndex].InverseLevel(refLevel: 1f);
     }
     
     private void SetInputDevice(int dropdownIndex)
@@ -58,6 +72,20 @@ public sealed class SoundcardSetupView : MonoBehaviour
         inputChannelCountText.text = $"Channels: {inputChannelsCount}";
         
         OnInputDeviceSelected.Invoke(_sharedInputDeviceIndexMap[dropdownIndex], inputChannelsCount);
+    }
+
+    private void CreateOutputVolumeOptions()
+    {
+        _outputDeviceVolumes = Enumerable.Range(0, volumeRange + 1)
+            .Where(i => i % volumeStep == 0)
+            .Select(i => (float)-i)
+            .ToList();
+        
+        outputVolumeDropdown.options = _outputDeviceVolumes
+            .Select(i => new TMP_Dropdown.OptionData(text: $"{i} dB"))
+            .ToList();
+        
+        outputVolumeDropdown.RefreshShownValue();
     }
     
     private void CreateDeviceOptionsFor(TMP_Dropdown deviceDropdown, DeviceType deviceType, int deviceCount)
