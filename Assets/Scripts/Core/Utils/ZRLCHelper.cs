@@ -21,6 +21,7 @@ public static class ZRLCHelper
         ReadOnlySpan<float> inputSignalSamples,
         ReadOnlySpan<float> outputSignalSamples,
         float equivalenceResistance,
+        ComplexFloat gainCorrectionRatio,
         ComplexFloat lineInputImpedance,
         ComplexFloat groundImpedance,
         float frequency,
@@ -31,7 +32,7 @@ public static class ZRLCHelper
         var zg = groundImpedance;
         
         ComplexFloat inPeak = inputSignalSamples.ComplexPeak(frequency, samplingRate);
-        ComplexFloat outPeak = outputSignalSamples.ComplexPeak(frequency, samplingRate);
+        ComplexFloat outPeak = gainCorrectionRatio * outputSignalSamples.ComplexPeak(frequency, samplingRate);
 
         return outPeak * zr * equivalenceResistance / (zr * (inPeak - outPeak) - outPeak * equivalenceResistance) - zg;
     }

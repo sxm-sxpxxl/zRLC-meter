@@ -11,6 +11,8 @@ using TMPro;
 /// </summary>
 public sealed class MeasurementSetupView : MonoBehaviour
 {
+    public event Action<float, float> OnFrequenyRangeUpdated = delegate { };
+
     [Header("Dependencies")]
     [SerializeField] private GeneralSettings generalSettings;
     
@@ -71,16 +73,19 @@ public sealed class MeasurementSetupView : MonoBehaviour
     
     private void InitFrequencyConfiguration()
     {
-        targetFrequencyInputField.SetValue(generalSettings.CalibrationFrequency);
-        lowCutOffFrequencyInputField.SetValue(generalSettings.LowCutOffFrequency);
-        highCutOffFrequencyInputField.SetValue(generalSettings.HighCutOffFrequency);
-        
-        singleFrequencyToggle.onValueChanged.AddListener(OnSingleToggleValueChanged);
-        rangeFrequencyToggle.onValueChanged.AddListener(OnRangeToggleValueChanged);
-        
         targetFrequencyInputField.OnValueEndEdit.AddListener(SetTargetFrequency);
         lowCutOffFrequencyInputField.OnValueEndEdit.AddListener(SetLowCutOffFrequency);
         highCutOffFrequencyInputField.OnValueEndEdit.AddListener(SetHighCutOffFrequency);
+        
+        targetFrequencyInputField.SetValue(generalSettings.CalibrationFrequency);
+        lowCutOffFrequencyInputField.SetValue(generalSettings.LowCutOffFrequency);
+        highCutOffFrequencyInputField.SetValue(generalSettings.HighCutOffFrequency);
+
+        singleFrequencyToggle.onValueChanged.AddListener(OnSingleToggleValueChanged);
+        rangeFrequencyToggle.onValueChanged.AddListener(OnRangeToggleValueChanged);
+        
+        OnSingleToggleValueChanged(true);
+        OnRangeToggleValueChanged(false);
 
         CreateDropdownFromAsInt<FrequencyIncrement>(
             dropdown: frequencyIncrementDropdown,
@@ -164,16 +169,20 @@ public sealed class MeasurementSetupView : MonoBehaviour
     {
         generalSettings.LowCutOffFrequency = value;
         generalSettings.HighCutOffFrequency = value;
+        
+        OnFrequenyRangeUpdated.Invoke(value, value);
     }
     
     private void SetLowCutOffFrequency(float value)
     {
         generalSettings.LowCutOffFrequency = value;
+        OnFrequenyRangeUpdated.Invoke(value, generalSettings.HighCutOffFrequency);
     }
 
     private void SetHighCutOffFrequency(float value)
     {
         generalSettings.HighCutOffFrequency = value;
+        OnFrequenyRangeUpdated.Invoke(generalSettings.LowCutOffFrequency, value);
     }
 
     private static void CreateDropdownFromEnumAsString<TEnum>(

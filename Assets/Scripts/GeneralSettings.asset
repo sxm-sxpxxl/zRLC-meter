@@ -20,8 +20,8 @@ MonoBehaviour:
   referenceResistance: 100
   calibrationFrequency: 1000
   transientTimeInMs: 300
-  lowCutOffFrequency: 200
-  highCutOffFrequency: 2000
+  lowCutOffFrequency: 1000
+  highCutOffFrequency: 1000
   frequencyIncrement: 24
   retryTimeoutInSec: 1
   averagingIterations: 50

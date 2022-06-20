@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using TMPro;
@@ -11,6 +12,9 @@ using DeviceType = SoundIO.SimpleDriver.DeviceType;
 [DisallowMultipleComponent]
 public sealed class SoundcardSetupView : MonoBehaviour
 {
+    public event Action<int, int> OnInputDeviceSelected = delegate { };
+    public event Action<int> OnOutputDeviceSelected = delegate { };
+
     [Header("Dependencies")]
     [SerializeField] private GeneralSettings generalSettings;
     
@@ -20,17 +24,17 @@ public sealed class SoundcardSetupView : MonoBehaviour
     [SerializeField] private TMP_Text inputChannelCountText;
 
     private List<int> _sharedInputDeviceIndexMap, _sharedOutputDeviceIndexMap;
-    
+
     private void Start()
     {
         CreateDeviceOptionsFor(outputDeviceDropdown, DeviceType.Output, DeviceDriver.OutputDeviceCount);
-        outputDeviceDropdown.onValueChanged.AddListener(SetOutputDevice);
         outputDeviceDropdown.value = _sharedOutputDeviceIndexMap.FindIndex(0, i => i == DeviceDriver.DefaultOutputDeviceIndex);
+        outputDeviceDropdown.onValueChanged.AddListener(SetOutputDevice);
         SetOutputDevice(outputDeviceDropdown.value);
 
         CreateDeviceOptionsFor(inputDeviceDropdown, DeviceType.Input, DeviceDriver.InputDeviceCount);
-        inputDeviceDropdown.onValueChanged.AddListener(SetInputDevice);
         inputDeviceDropdown.value = _sharedOutputDeviceIndexMap.FindIndex(0, i => i == DeviceDriver.DefaultInputDeviceIndex);
+        inputDeviceDropdown.onValueChanged.AddListener(SetInputDevice);
         SetInputDevice(inputDeviceDropdown.value);
     }
     
@@ -43,14 +47,17 @@ public sealed class SoundcardSetupView : MonoBehaviour
     private void SetOutputDevice(int dropdownIndex)
     {
         generalSettings.OutputDeviceIndex = _sharedOutputDeviceIndexMap[dropdownIndex];
+        OnOutputDeviceSelected.Invoke(_sharedOutputDeviceIndexMap[dropdownIndex]);
     }
     
     private void SetInputDevice(int dropdownIndex)
     {
         generalSettings.InputDeviceIndex = _sharedInputDeviceIndexMap[dropdownIndex];
 
-        int inputChannelCount = DeviceDriver.GetDeviceChannelCount(dropdownIndex, DeviceType.Input);
-        inputChannelCountText.text = $"Channels: {inputChannelCount}";
+        int inputChannelsCount = DeviceDriver.GetDeviceChannelCount(dropdownIndex, DeviceType.Input);
+        inputChannelCountText.text = $"Channels: {inputChannelsCount}";
+        
+        OnInputDeviceSelected.Invoke(_sharedInputDeviceIndexMap[dropdownIndex], inputChannelsCount);
     }
     
     private void CreateDeviceOptionsFor(TMP_Dropdown deviceDropdown, DeviceType deviceType, int deviceCount)

@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 public sealed class TabGroup : MonoBehaviour
 {
     [SerializeField] private List<TabPage> tabPages = new List<TabPage>();
     [SerializeField, Range(0, 3)] private int defaultTabPageIndex = 0;
+    [SerializeField] private bool activatePagesOnAwake = true;
 
     private TabPage _selectedTabPage;
     
@@ -27,12 +29,18 @@ public sealed class TabGroup : MonoBehaviour
     {
         foreach (var tabPage in tabPages)
         {
+            tabPage.page.SetActive(activatePagesOnAwake);
             tabPage.tab.OnClick += OnTabClick;
         }
     }
 
     private void Start()
     {
+        if (activatePagesOnAwake)
+        {
+            tabPages.ForEach(x => x.page.SetActive(false));
+        }
+
         SetTabPage(defaultTabPageIndex);
     }
 

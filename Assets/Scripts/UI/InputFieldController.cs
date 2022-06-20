@@ -93,8 +93,8 @@ public sealed class InputFieldController : MonoBehaviour
         {
             return;
         }
-        
-        SetValue(float.Parse(text));
+
+        SetValue(string.IsNullOrEmpty(text) ? Value : float.Parse(text));
         OnValueEndEdit.Invoke(Value);
     }
 }

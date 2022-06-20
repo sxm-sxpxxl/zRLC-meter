@@ -105,6 +105,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                     inputDataSamples,
                     outputDataSamples,
                     generalSettings.ReferenceResistance,
+                    channelsCalibrator.GainCorrectionRatio,
                     channelsCalibrator.LineInputImpedance,
                     channelsCalibrator.GroundImpedance,
                     CurrentFrequency,
