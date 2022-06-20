@@ -156,7 +156,10 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                     _outputDeviceGenerator.StopGeneration();
                     _inputDeviceListener.StopListening();
                     
-                    OnCalibrationErrorOccurred.Invoke("Impedance is measured as NaN. Сheck your circuit and try again.");
+                    OnCalibrationErrorOccurred.Invoke(
+                        "The impedance was measured as NaN over an extended period of time. " +
+                            "Сheck your circuit, its connection to the soundcard and try again."
+                    );
                     yield break;
                 }
                 

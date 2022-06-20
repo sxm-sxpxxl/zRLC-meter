@@ -29,8 +29,6 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
     [field: Header("Debug Info"), SerializeField]
     private float CurrentFrequency { get; set; }
     
-    private bool IsChannelCountValid => _inputDeviceListener.GetChannelCountBy(generalSettings.InputDeviceIndex) == 2;
-
     private void Start()
     {
         _outputDeviceGenerator = OutputDeviceGenerator.Instance;
@@ -59,12 +57,6 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
 
     private IEnumerator MeasuringCoroutine()
     {
-        if (IsChannelCountValid == false)
-        {
-            OnImpedanceMeasuringErrorOccurred.Invoke("There must be two channels of LineIn to carry out measurements. Сheck your connections and try again.");
-            yield break;
-        }
-        
         float previousFrequency, elapsedRetryTimeoutInSec = 0f;
         CurrentFrequency = generalSettings.LowCutOffFrequency;
         _octaveScaler = OctaveFactor * (1f / (int) generalSettings.FrequencyIncrement);
@@ -111,13 +103,16 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                     CurrentFrequency,
                     generalSettings.SamplingRate
                 );
-
+                
                 if (float.IsNaN(computedImpedance.Magnitude) || float.IsNaN(computedImpedance.AngleInRad))
                 {
                     if (elapsedRetryTimeoutInSec > generalSettings.RetryTimeoutInSec)
                     {
                         StopGenerationAndListening();
-                        OnImpedanceMeasuringErrorOccurred.Invoke("Impedance is measured as NaN. Сheck your circuit and try again.");
+                        OnImpedanceMeasuringErrorOccurred.Invoke(
+                            "Test impedance are measured as NaN over an extended period of time. " +
+                                "Сheck your circuit, its connection to the soundcard and try again."
+                        );
                         yield break;
                     }
                     
