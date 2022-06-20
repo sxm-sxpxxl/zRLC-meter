@@ -12,6 +12,7 @@ public static class ZRLCHelper
     /// <param name="inputSignalSamples">Входной сигнал.</param>
     /// <param name="outputSignalSamples">Выходной сигнал.</param>
     /// <param name="equivalenceResistance">Эквивалентное сопротивление.</param>
+    /// <param name="gainCorrectionRatio">Отношение коррекции между каналами линейного входа.</param>
     /// <param name="lineInputImpedance">Входной импеданс звуковой карты.</param>
     /// <param name="groundImpedance">Импеданс в цепи с тестовым компонентом.</param>
     /// <param name="frequency">Частота сгенерированного сигнала.</param>

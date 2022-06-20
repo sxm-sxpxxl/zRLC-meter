@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using SoundIO.SimpleDriver;
 
 public sealed class SoundcardSetupPageValidator : PageValidator
@@ -6,7 +7,8 @@ public sealed class SoundcardSetupPageValidator : PageValidator
     [Header("Dependencies")]
     [SerializeField] private SoundcardSetupView soundcardSetupView;
     [SerializeField, Range(1, 3)] private int requiredChannelsCount = 2;
-
+    [SerializeField] private Selectable testGenerateButton;
+    
     [Header("Validation info boxes")]
     [SerializeField] private GameObject noneInputDeviceInfoBox;
     [SerializeField] private GameObject wrongChannelsInfoBox;
@@ -65,5 +67,6 @@ public sealed class SoundcardSetupPageValidator : PageValidator
     private void UpdateValidationState()
     {
         IsValid = _isInputDeviceValid && _isOutputDeviceValid;
+        testGenerateButton.interactable = IsValid;
     }
 }
