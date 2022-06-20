@@ -26,8 +26,6 @@ public sealed class ChannelsCalibrator : MonoBehaviour
     public ComplexFloat LineInputImpedance => _lineInputImpedance ?? ComplexFloat.FromAngle(0f, 1e9f);
     public ComplexFloat GroundImpedance => _groundImpedance ?? ComplexFloat.FromAngle(0f, 0f);
 
-    private bool IsChannelCountValid => _inputDeviceListener.GetChannelCountBy(generalSettings.InputDeviceIndex) == 2;
-
     private void Start()
     {
         _outputDeviceGenerator = OutputDeviceGenerator.Instance;
@@ -53,8 +51,6 @@ public sealed class ChannelsCalibrator : MonoBehaviour
 
     public void OpenCalibrate()
     {
-        const float minLineInputImpedanceMagnitude = 1f;
-        
         StartCoroutine(CalibrationCoroutine(result =>
         {
             _lineInputImpedance = result;
@@ -62,20 +58,12 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                       $"<color=yellow>Magnitude</color> = {_lineInputImpedance.Value.Magnitude} Ohm  " +
                       $"<color=yellow>Phase</color> = {_lineInputImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
 
-            if (_lineInputImpedance.Value.Magnitude < minLineInputImpedanceMagnitude)
-            {
-                OnCalibrationErrorOccurred.Invoke($"LineIn impedance is measured as too small ({_lineInputImpedance.Value.Magnitude} Ohm). Check your circuit and try again.");
-                return;
-            }
-            
             OnOpenCalibrationFinished.Invoke(_lineInputImpedance.Value);
         }));
     }
     
     public void ShortCalibrate()
     {
-        const float maxGroundImpedanceMagnitude = 1f;
-        
         StartCoroutine(CalibrationCoroutine(result =>
         {
             _groundImpedance = result.AsReal;
@@ -83,25 +71,12 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                       $"<color=yellow>Magnitude</color> = {_groundImpedance.Value.Magnitude} Ohm  " +
                       $"<color=yellow>Phase</color> = {_groundImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
             
-            if (_groundImpedance.Value.Magnitude > maxGroundImpedanceMagnitude)
-            {
-                OnCalibrationErrorOccurred.Invoke($"Ground impedance is measured as too big ({_groundImpedance.Value.Magnitude} Ohm). Check your circuit and try again.");
-                return;
-            }
-
             OnShortCalibrationFinished.Invoke(_groundImpedance.Value);
         }));
     }
 
     private IEnumerator GainCorrectionCoroutine(Action<ComplexFloat> getGainCorrectionRatioCallback)
     {
-        if (IsChannelCountValid == false)
-        {
-            // OnCalibrationErrorOccurred.Invoke("There must be two channels of LineIn to carry out measurements. Сheck your connections and try again.");
-            OnGainCalibrationFinished.Invoke(ComplexFloat.FromAngle(0f, 1f));
-            yield break;
-        }
-
         _outputDeviceGenerator.StartGeneration(generalSettings.OutputDeviceIndex, generalSettings.CalibrationFrequency, generalSettings.SamplingRate);
         _inputDeviceListener.StartListening(generalSettings.InputDeviceIndex, generalSettings.InputOutputChannelOffsets);
 
@@ -145,14 +120,6 @@ public sealed class ChannelsCalibrator : MonoBehaviour
 
     private IEnumerator CalibrationCoroutine(Action<ComplexFloat> getCalibratedImpedanceCallback)
     {
-        if (IsChannelCountValid == false)
-        {
-            // OnCalibrationErrorOccurred.Invoke("There must be two channels of LineIn to carry out measurements. Сheck your connections and try again.");
-            OnOpenCalibrationFinished.Invoke(ComplexFloat.FromAngle(0f, 1000f));
-            OnShortCalibrationFinished.Invoke(ComplexFloat.FromAngle(0f, 0.5f));
-            yield break;
-        }
-        
         _outputDeviceGenerator.StartGeneration(generalSettings.OutputDeviceIndex, generalSettings.CalibrationFrequency, generalSettings.SamplingRate);
         _inputDeviceListener.StartListening(generalSettings.InputDeviceIndex, generalSettings.InputOutputChannelOffsets);
 

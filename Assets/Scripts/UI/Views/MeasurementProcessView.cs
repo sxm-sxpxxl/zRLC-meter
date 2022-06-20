@@ -13,6 +13,9 @@ public sealed class MeasurementProcessView : MonoBehaviour
     [SerializeField] private GraphScreenshotSaver graphScreenshotSaver;
 
     [Header("Measurement Process")]
+    [SerializeField] private Button startButton;
+    [SerializeField] private Button stopButton;
+    [Space]
     [SerializeField] private Toggle capacitanceToggle;
     [SerializeField] private Toggle inductanceToggle;
     [Space]
@@ -28,6 +31,12 @@ public sealed class MeasurementProcessView : MonoBehaviour
     {
         impedanceMeasurer.OnImpedanceMeasured += OnImpedanceSelected;
         impedanceChartFeedView.OnImpedanceSelected += OnImpedanceSelected;
+
+        impedanceMeasurer.OnImpedanceMeasuringFinished += SetStopButtonMode;
+        startButton.onClick.AddListener(OnStartButtonClick);
+        stopButton.onClick.AddListener(OnStopButtonClick);
+        
+        SetStopButtonMode();
         
         capacitanceToggle.onValueChanged.AddListener(OnCapacitanceToggleValueChanged);
         inductanceToggle.onValueChanged.AddListener(OnInductanceToggleValueChanged);
@@ -42,6 +51,10 @@ public sealed class MeasurementProcessView : MonoBehaviour
     {
         impedanceMeasurer.OnImpedanceMeasured -= OnImpedanceSelected;
         impedanceChartFeedView.OnImpedanceSelected -= OnImpedanceSelected;
+        
+        impedanceMeasurer.OnImpedanceMeasuringFinished -= SetStopButtonMode;
+        startButton.onClick.RemoveListener(OnStartButtonClick);
+        stopButton.onClick.RemoveListener(OnStopButtonClick);
         
         capacitanceToggle.onValueChanged.RemoveListener(OnCapacitanceToggleValueChanged);
         inductanceToggle.onValueChanged.RemoveListener(OnInductanceToggleValueChanged);
@@ -67,6 +80,18 @@ public sealed class MeasurementProcessView : MonoBehaviour
         capacitanceInputField.SetValue(ZRLCHelper.ComputeCapacitance(data));
         inductanceInputField.SetValue(ZRLCHelper.ComputeInductance(data));
     }
+    
+    private void OnStartButtonClick()
+    {
+        SetStartButtonMode();
+        impedanceMeasurer.StartMeasuring();
+    }
+    
+    private void OnStopButtonClick()
+    {
+        SetStopButtonMode();
+        impedanceMeasurer.StopMeasuring();
+    }
 
     private void OnClearResultsButtonClick()
     {
@@ -77,6 +102,16 @@ public sealed class MeasurementProcessView : MonoBehaviour
     private void OnSaveGraphButtonClick()
     {
         graphScreenshotSaver.TakeScreenshot();
+    }
+    
+    private void SetStartButtonMode() => SetButtonMode(false);
+    
+    private void SetStopButtonMode() => SetButtonMode(true);
+    
+    private void SetButtonMode(bool isStartButtonInteractable)
+    {
+        startButton.gameObject.SetActive(isStartButtonInteractable);
+        stopButton.gameObject.SetActive(!isStartButtonInteractable);
     }
     
     private void ResetResults()
