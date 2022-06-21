@@ -38,5 +38,6 @@ public sealed class TestGenerationProcessView : MonoBehaviour
         phaseShiftInputField.SetValue(phaseShiftInRad * Mathf.Rad2Deg);
             
         testGenerateButton.interactable = true;
+        testGenerateButton.Select();
     }
 }

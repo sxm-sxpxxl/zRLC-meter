@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: DashVertical
+  m_Name: DashHorizontal
   m_Shader: {fileID: 4800000, guid: 0a799adfcb28a1847873696ef5d3c504, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
@@ -50,8 +50,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: 8762961cfa97f3145bb226575b2a6e5e, type: 3}
-        m_Scale: {x: 1, y: 36}
-        m_Offset: {x: 0, y: 0.89904785}
+        m_Scale: {x: 36, y: 1}
+        m_Offset: {x: 0.49925613, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}

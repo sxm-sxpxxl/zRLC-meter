@@ -108,10 +108,13 @@ public sealed class MeasurementProcessView : MonoBehaviour
     
     private void SetStopButtonMode() => SetButtonMode(true);
     
-    private void SetButtonMode(bool isStartButtonInteractable)
+    private void SetButtonMode(bool isStartButtonActive)
     {
-        startButton.gameObject.SetActive(isStartButtonInteractable);
-        stopButton.gameObject.SetActive(!isStartButtonInteractable);
+        startButton.gameObject.SetActive(isStartButtonActive);
+        stopButton.gameObject.SetActive(!isStartButtonActive);
+
+        Button targetSelectButton = isStartButtonActive ? startButton : stopButton;
+        targetSelectButton.Select();
     }
     
     private void ResetResults()

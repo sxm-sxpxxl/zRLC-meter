@@ -35,6 +35,7 @@ public sealed class InputFieldController : MonoBehaviour
     {
         customRaycaster.OnPointerClick += OnInputFieldClick;
         selfInputField.onEndEdit.AddListener(OnTextEndEdit);
+        selfInputField.onSelect.AddListener(OnInputFieldSelect);
     }
 
     private void OnDestroy()
@@ -71,6 +72,8 @@ public sealed class InputFieldController : MonoBehaviour
         selfInputField.readOnly = isReadonly;
         prefixText.text = $"{units}";
     }
+
+    private void OnInputFieldSelect(string _) => OnInputFieldClick(new PointerEventData(EventSystem.current));
     
     private void OnInputFieldClick(PointerEventData eventData)
     {

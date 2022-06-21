@@ -74,9 +74,19 @@ public sealed class CalibrationProcessView : MonoBehaviour
             CalibrationProcessController.CalibrationType.Short => groundImpedanceInputField,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
-
+        
         targetInputField.SetValue(result.Magnitude);
         OnCalibrationValueChanged.Invoke(type, result);
+        
+        Button targetButton = type switch
+        {
+            CalibrationProcessController.CalibrationType.Gain => gainCalibrationButton,
+            CalibrationProcessController.CalibrationType.Open => openCalibrationButton,
+            CalibrationProcessController.CalibrationType.Short => shortCalibrationButton,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+
+        targetButton.Select();
     }
 
     private void OnCalibrationErrorOccurred(string message)
