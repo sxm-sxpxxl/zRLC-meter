@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 public sealed class CalibrationProcessPageValidator : PageValidator
@@ -36,17 +37,13 @@ public sealed class CalibrationProcessPageValidator : PageValidator
         _isGainCorrectionValid = _isInputImpedanceValid = _isGroundImpedanceValid = false;
         UpdateValidationState();
         
-        calibrationProcessView.OnGainCorrectionCalibrated += OnGainCorrectionCalibrated;
-        calibrationProcessView.OnInputImpedanceCalibrated += OnInputImpedanceCalibrated;
-        calibrationProcessView.OnGroundImpedanceCalibrated += OnGroundImpedanceCalibrated;
+        calibrationProcessView.OnCalibrationValueChanged += OnCalibrationValueChanged;
     }
 
     protected override void Deinit()
     {
         base.Deinit();
-        calibrationProcessView.OnGainCorrectionCalibrated -= OnGainCorrectionCalibrated;
-        calibrationProcessView.OnInputImpedanceCalibrated -= OnInputImpedanceCalibrated;
-        calibrationProcessView.OnGroundImpedanceCalibrated -= OnGroundImpedanceCalibrated;
+        calibrationProcessView.OnCalibrationValueChanged -= OnCalibrationValueChanged;
     }
 
     protected override void OnDependencyStateChanged(bool isErrorsExist, bool isWarningsExist)
@@ -54,38 +51,46 @@ public sealed class CalibrationProcessPageValidator : PageValidator
         gainCalibrationButton.interactable = openCalibrationButton.interactable = shortCalibrationButton.interactable = !isErrorsExist;
     }
 
-    private void OnGainCorrectionCalibrated(ComplexFloat gainCorrectionRatio)
+    private void OnCalibrationValueChanged(CalibrationProcessController.CalibrationType type, ComplexFloat result)
     {
-        const float maxGainCorrectionRatio = 10f, minGainCorrectionRatio = 0.1f;
-        float magnitude = gainCorrectionRatio.Magnitude;
-
-        _isGainCorrectionValid = magnitude > minGainCorrectionRatio && magnitude < maxGainCorrectionRatio;
-        noneGainCorrectionInfoBox.SetActive(false);
-        wrongGainCorrectionInfoBox.SetActive(_isGainCorrectionValid == false);
+        Action<ComplexFloat> calibrationResultHandler = type switch
+        {
+            CalibrationProcessController.CalibrationType.Gain => HandleGainCorrection,
+            CalibrationProcessController.CalibrationType.Open => HandleInputImpedance,
+            CalibrationProcessController.CalibrationType.Short => HandleGroundImpedance,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
         
+        calibrationResultHandler.Invoke(result);
         UpdateValidationState();
     }
 
-    private void OnInputImpedanceCalibrated(ComplexFloat inputImpedance)
+    private void HandleGainCorrection(ComplexFloat gainCorrectionRatio)
+    {
+        const float maxGainCorrectionRatio = 10f, minGainCorrectionRatio = 0.1f;
+        float magnitude = gainCorrectionRatio.Magnitude;
+        
+        _isGainCorrectionValid = magnitude > minGainCorrectionRatio && magnitude < maxGainCorrectionRatio;
+        noneGainCorrectionInfoBox.SetActive(false);
+        wrongGainCorrectionInfoBox.SetActive(_isGainCorrectionValid == false);
+    }
+
+    private void HandleInputImpedance(ComplexFloat inputImpedance)
     {
         const float minInputImpedanceMagnitude = 1f;
         _isInputImpedanceValid = inputImpedance.Magnitude > minInputImpedanceMagnitude;
         
         noneInputImpedanceInfoBox.SetActive(false);
         wrongInputImpedanceInfoBox.SetActive(_isInputImpedanceValid == false);
-        
-        UpdateValidationState();
     }
 
-    private void OnGroundImpedanceCalibrated(ComplexFloat groundImpedance)
+    private void HandleGroundImpedance(ComplexFloat groundImpedance)
     {
         const float maxGroundImpedanceMagnitude = 1f;
         _isGroundImpedanceValid = groundImpedance.Magnitude < maxGroundImpedanceMagnitude;
         
         noneGroundImpedanceInfoBox.SetActive(false);
         wrongGroundImpedanceInfoBox.SetActive(_isGroundImpedanceValid == false);
-        
-        UpdateValidationState();
     }
 
     private void UpdateValidationState()

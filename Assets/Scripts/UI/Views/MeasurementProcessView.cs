@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public sealed class MeasurementProcessView : MonoBehaviour
 {
     [Header("Dependencies")]
-    [SerializeField] private ImpedanceMeasurer impedanceMeasurer;
+    [SerializeField] private MeasurementProcessController measurementProcessController;
     [SerializeField] private ImpedanceChartFeedView impedanceChartFeedView;
     [SerializeField] private GraphScreenshotSaver graphScreenshotSaver;
 
@@ -29,10 +29,10 @@ public sealed class MeasurementProcessView : MonoBehaviour
 
     private void Awake()
     {
-        impedanceMeasurer.OnImpedanceMeasured += OnImpedanceSelected;
+        measurementProcessController.OnImpedanceMeasured += OnImpedanceSelected;
         impedanceChartFeedView.OnImpedanceSelected += OnImpedanceSelected;
 
-        impedanceMeasurer.OnImpedanceMeasuringFinished += SetStopButtonMode;
+        measurementProcessController.OnImpedanceMeasuringFinished += SetStopButtonMode;
         startButton.onClick.AddListener(OnStartButtonClick);
         stopButton.onClick.AddListener(OnStopButtonClick);
         
@@ -49,10 +49,10 @@ public sealed class MeasurementProcessView : MonoBehaviour
 
     private void OnDestroy()
     {
-        impedanceMeasurer.OnImpedanceMeasured -= OnImpedanceSelected;
+        measurementProcessController.OnImpedanceMeasured -= OnImpedanceSelected;
         impedanceChartFeedView.OnImpedanceSelected -= OnImpedanceSelected;
         
-        impedanceMeasurer.OnImpedanceMeasuringFinished -= SetStopButtonMode;
+        measurementProcessController.OnImpedanceMeasuringFinished -= SetStopButtonMode;
         startButton.onClick.RemoveListener(OnStartButtonClick);
         stopButton.onClick.RemoveListener(OnStopButtonClick);
         
@@ -84,13 +84,13 @@ public sealed class MeasurementProcessView : MonoBehaviour
     private void OnStartButtonClick()
     {
         SetStartButtonMode();
-        impedanceMeasurer.StartMeasuring();
+        measurementProcessController.StartMeasuring();
     }
     
     private void OnStopButtonClick()
     {
         SetStopButtonMode();
-        impedanceMeasurer.StopMeasuring();
+        measurementProcessController.StopMeasuring();
     }
 
     private void OnClearResultsButtonClick()

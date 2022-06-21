@@ -11,7 +11,7 @@ public sealed class ImpedanceChartFeedView : MonoBehaviour
     public event Action<ImpedanceMeasureData> OnImpedanceSelected = delegate { };
 
     [Header("Dependencies")]
-    [SerializeField] private ImpedanceMeasurer impedanceMeasurer;
+    [SerializeField] private MeasurementProcessController measurementProcessController;
     
     [Header("Settings")]
     [SerializeField] private GraphChartBase magnitudeGraph;
@@ -24,14 +24,14 @@ public sealed class ImpedanceChartFeedView : MonoBehaviour
 
     private void Awake()
     {
-        impedanceMeasurer.OnImpedanceMeasured += AddImpedanceMeasureToChart;
-        impedanceMeasurer.OnImpedanceMeasuringStarted += ClearChartData;
+        measurementProcessController.OnImpedanceMeasured += AddImpedanceMeasureToChart;
+        measurementProcessController.OnImpedanceMeasuringStarted += ClearChartData;
     }
 
     private void OnDestroy()
     {
-        impedanceMeasurer.OnImpedanceMeasured -= AddImpedanceMeasureToChart;
-        impedanceMeasurer.OnImpedanceMeasuringStarted -= ClearChartData;
+        measurementProcessController.OnImpedanceMeasured -= AddImpedanceMeasureToChart;
+        measurementProcessController.OnImpedanceMeasuringStarted -= ClearChartData;
     }
     
     public void OnChartPointClicked(GraphChartBase.GraphEventArgs graphEventArgs)

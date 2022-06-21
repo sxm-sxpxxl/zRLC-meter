@@ -12,8 +12,8 @@ public sealed class NotificationView : MonoBehaviour
     private const string CalibrationErrorTitle = "Calibration failed";
     
     [Header("Dependencies")]
-    [SerializeField] private ImpedanceMeasurer impedanceMeasurer;
-    [SerializeField] private ChannelsCalibrator channelsCalibrator;
+    [SerializeField] private MeasurementProcessController measurementProcessController;
+    [SerializeField] private CalibrationProcessController calibrationProcessController;
 
     [Header("Content")]
     [SerializeField] private GameObject notificationContainer;
@@ -25,15 +25,15 @@ public sealed class NotificationView : MonoBehaviour
     {
         HideNotification();
         
-        impedanceMeasurer.OnImpedanceMeasuringErrorOccurred += OnImpedanceMeasuringErrorOccurred;
-        channelsCalibrator.OnCalibrationErrorOccurred += OnCalibrationErrorOccurred;
+        measurementProcessController.OnImpedanceMeasuringErrorOccurred += OnImpedanceMeasuringErrorOccurred;
+        calibrationProcessController.OnCalibrationErrorOccurred += OnCalibrationErrorOccurred;
         closeButton.onClick.AddListener(HideNotification);
     }
 
     private void OnDestroy()
     {
-        impedanceMeasurer.OnImpedanceMeasuringErrorOccurred -= OnImpedanceMeasuringErrorOccurred;
-        channelsCalibrator.OnCalibrationErrorOccurred -= OnCalibrationErrorOccurred;
+        measurementProcessController.OnImpedanceMeasuringErrorOccurred -= OnImpedanceMeasuringErrorOccurred;
+        calibrationProcessController.OnCalibrationErrorOccurred -= OnCalibrationErrorOccurred;
         closeButton.onClick.RemoveListener(HideNotification);
     }
 

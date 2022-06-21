@@ -8,12 +8,10 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public sealed class CalibrationProcessView : MonoBehaviour
 {
-    public event Action<ComplexFloat> OnGainCorrectionCalibrated = delegate { };
-    public event Action<ComplexFloat> OnInputImpedanceCalibrated = delegate { };
-    public event Action<ComplexFloat> OnGroundImpedanceCalibrated = delegate { };
+    public event Action<CalibrationProcessController.CalibrationType, ComplexFloat> OnCalibrationValueChanged = delegate { };
 
     [Header("Dependencies")]
-    [SerializeField] private ChannelsCalibrator channelsCalibrator;
+    [SerializeField] private CalibrationProcessController calibrationProcessController;
 
     [Header("Calibration Process")]
     [SerializeField] private Button gainCalibrationButton;
@@ -33,10 +31,8 @@ public sealed class CalibrationProcessView : MonoBehaviour
         openCalibrationButton.onClick.AddListener(OnOpenCalibrationButtonClick);
         shortCalibrationButton.onClick.AddListener(OnShortCalibrationButtonClick);
         
-        channelsCalibrator.OnCalibrationErrorOccurred += OnCalibrationErrorOccurred;
-        channelsCalibrator.OnGainCalibrationFinished += OnGainCalibrationFinished;
-        channelsCalibrator.OnOpenCalibrationFinished += OnOpenCalibrationFinished;
-        channelsCalibrator.OnShortCalibrationFinished += OnShortCalibrationFinished;
+        calibrationProcessController.OnCalibrationErrorOccurred += OnCalibrationErrorOccurred;
+        calibrationProcessController.OnCalibrationFinished += OnCalibrationFinished;
     }
 
     private void OnDestroy()
@@ -45,49 +41,42 @@ public sealed class CalibrationProcessView : MonoBehaviour
         openCalibrationButton.onClick.RemoveListener(OnOpenCalibrationButtonClick);
         shortCalibrationButton.onClick.AddListener(OnShortCalibrationButtonClick);
         
-        channelsCalibrator.OnCalibrationErrorOccurred -= OnCalibrationErrorOccurred;
-        channelsCalibrator.OnGainCalibrationFinished -= OnGainCalibrationFinished;
-        channelsCalibrator.OnOpenCalibrationFinished -= OnOpenCalibrationFinished;
-        channelsCalibrator.OnShortCalibrationFinished -= OnShortCalibrationFinished;
+        calibrationProcessController.OnCalibrationErrorOccurred -= OnCalibrationErrorOccurred;
+        calibrationProcessController.OnCalibrationFinished -= OnCalibrationFinished;
     }
 
     private void OnGainCalibrationButtonClick()
     {
         ActivateCalibrationMode();
-        channelsCalibrator.GainCalibrate();
+        calibrationProcessController.GainCalibrate();
     }
 
     private void OnOpenCalibrationButtonClick()
     {
         ActivateCalibrationMode();
-        channelsCalibrator.OpenCalibrate();
+        calibrationProcessController.OpenCalibrate();
     }
 
     private void OnShortCalibrationButtonClick()
     {
         ActivateCalibrationMode();
-        channelsCalibrator.ShortCalibrate();
+        calibrationProcessController.ShortCalibrate();
     }
 
-    private void OnGainCalibrationFinished(ComplexFloat gainCorrectionRatio)
+    private void OnCalibrationFinished(CalibrationProcessController.CalibrationType type, ComplexFloat result)
     {
         DeactivateCalibrationMode();
-        gainCorrectionInputField.SetValue(gainCorrectionRatio.Magnitude);
-        OnGainCorrectionCalibrated.Invoke(gainCorrectionRatio);
-    }
-    
-    private void OnOpenCalibrationFinished(ComplexFloat inputImpedance)
-    {
-        DeactivateCalibrationMode();
-        inputImpedanceInputField.SetValue(inputImpedance.Magnitude);
-        OnInputImpedanceCalibrated.Invoke(inputImpedance);
-    }
 
-    private void OnShortCalibrationFinished(ComplexFloat groundImpedance)
-    {
-        DeactivateCalibrationMode();
-        groundImpedanceInputField.SetValue(groundImpedance.Magnitude);
-        OnGroundImpedanceCalibrated.Invoke(groundImpedance);
+        InputFieldController targetInputField = type switch
+        {
+            CalibrationProcessController.CalibrationType.Gain => gainCorrectionInputField,
+            CalibrationProcessController.CalibrationType.Open => inputImpedanceInputField,
+            CalibrationProcessController.CalibrationType.Short => groundImpedanceInputField,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+
+        targetInputField.SetValue(result.Magnitude);
+        OnCalibrationValueChanged.Invoke(type, result);
     }
 
     private void OnCalibrationErrorOccurred(string message)

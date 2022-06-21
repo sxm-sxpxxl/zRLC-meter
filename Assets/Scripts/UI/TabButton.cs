@@ -96,7 +96,7 @@ public sealed class TabButton : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
     {
-        if (_currentState != State.Select)
+        if (_currentState != State.Select && _currentState != State.Disable)
         {
             OnClick.Invoke(this);
         }

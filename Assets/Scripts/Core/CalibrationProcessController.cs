@@ -7,11 +7,11 @@ using UnityEngine.Assertions;
 /// Отвечает за калибровку левого и правого каналов входного порта Line In.
 /// </summary>
 [DisallowMultipleComponent]
-public sealed class ChannelsCalibrator : MonoBehaviour
+public sealed class CalibrationProcessController : MonoBehaviour
 {
-    public event Action<ComplexFloat> OnGainCalibrationFinished = delegate { };
-    public event Action<ComplexFloat> OnOpenCalibrationFinished = delegate { };
-    public event Action<ComplexFloat> OnShortCalibrationFinished = delegate { };
+    public event Action OnCalibrationStarted = delegate { };
+    public event Action<CalibrationType, float> OnCalibrationProgressUpdated = delegate { };
+    public event Action<CalibrationType, ComplexFloat> OnCalibrationFinished = delegate { };
     public event Action<string> OnCalibrationErrorOccurred = delegate { };
 
     [Header("Dependencies")]
@@ -26,6 +26,13 @@ public sealed class ChannelsCalibrator : MonoBehaviour
     public ComplexFloat LineInputImpedance => _lineInputImpedance ?? ComplexFloat.FromAngle(0f, 1e9f);
     public ComplexFloat GroundImpedance => _groundImpedance ?? ComplexFloat.FromAngle(0f, 0f);
 
+    public enum CalibrationType
+    {
+        Gain,
+        Open,
+        Short
+    }
+    
     private void Start()
     {
         _outputDeviceGenerator = OutputDeviceGenerator.Instance;
@@ -45,34 +52,40 @@ public sealed class ChannelsCalibrator : MonoBehaviour
                 $"<color=yellow>Magnitude:</color> {_gainCorrectionRatio.Value.Magnitude}  " +
                 $"<color=yellow>Phase:</color> {_gainCorrectionRatio.Value.AngleInRad * Mathf.Rad2Deg} °");
 
-            OnGainCalibrationFinished.Invoke(_gainCorrectionRatio.Value);
+            OnCalibrationFinished.Invoke(CalibrationType.Gain, _gainCorrectionRatio.Value);
         }));
+        
+        OnCalibrationStarted.Invoke();
     }
 
     public void OpenCalibrate()
     {
-        StartCoroutine(CalibrationCoroutine(result =>
+        StartCoroutine(CalibrationCoroutine(CalibrationType.Open, result =>
         {
             _lineInputImpedance = result;
             Debug.Log($"LineIn impedance: <color=yellow>{_lineInputImpedance.Value.real} + {_lineInputImpedance.Value.imag}j</color>  " +
                       $"<color=yellow>Magnitude</color> = {_lineInputImpedance.Value.Magnitude} Ohm  " +
                       $"<color=yellow>Phase</color> = {_lineInputImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
 
-            OnOpenCalibrationFinished.Invoke(_lineInputImpedance.Value);
+            OnCalibrationFinished.Invoke(CalibrationType.Open, _lineInputImpedance.Value);
         }));
+        
+        OnCalibrationStarted.Invoke();
     }
     
     public void ShortCalibrate()
     {
-        StartCoroutine(CalibrationCoroutine(result =>
+        StartCoroutine(CalibrationCoroutine(CalibrationType.Short, result =>
         {
             _groundImpedance = result.AsReal;
             Debug.Log($"<color=yellow>Ground impedance:</color> {_groundImpedance.Value.real} + {_groundImpedance.Value.imag}j  " +
                       $"<color=yellow>Magnitude</color> = {_groundImpedance.Value.Magnitude} Ohm  " +
                       $"<color=yellow>Phase</color> = {_groundImpedance.Value.AngleInRad * Mathf.Rad2Deg} °");
             
-            OnShortCalibrationFinished.Invoke(_groundImpedance.Value);
+            OnCalibrationFinished.Invoke(CalibrationType.Short, _groundImpedance.Value);
         }));
+        
+        OnCalibrationStarted.Invoke();
     }
 
     private IEnumerator GainCorrectionCoroutine(Action<ComplexFloat> getGainCorrectionRatioCallback)
@@ -104,6 +117,8 @@ public sealed class ChannelsCalibrator : MonoBehaviour
             gainCorrectionRatio += inPeak / outPeak;
             rmsRatio += inputDataSamples.Rms() / outputDataSamples.Rms();
             i++;
+            
+            OnCalibrationProgressUpdated.Invoke(CalibrationType.Gain, (float) i / generalSettings.AveragingIterations);
 
             yield return null;
         }
@@ -118,7 +133,7 @@ public sealed class ChannelsCalibrator : MonoBehaviour
         getGainCorrectionRatioCallback.Invoke(gainCorrectionRatio);
     }
 
-    private IEnumerator CalibrationCoroutine(Action<ComplexFloat> getCalibratedImpedanceCallback)
+    private IEnumerator CalibrationCoroutine(CalibrationType type, Action<ComplexFloat> getCalibratedImpedanceCallback)
     {
         _outputDeviceGenerator.StartGeneration(generalSettings.OutputDeviceIndex, generalSettings.CalibrationFrequency, generalSettings.SamplingRate);
         _inputDeviceListener.StartListening(generalSettings.InputDeviceIndex, generalSettings.InputOutputChannelOffsets);
@@ -173,6 +188,8 @@ public sealed class ChannelsCalibrator : MonoBehaviour
             
             calibratedImpedance += computedImpedance;
             i++;
+            
+            OnCalibrationProgressUpdated.Invoke(type, (float) i / generalSettings.AveragingIterations);
             
             elapsedRetryTimeoutInSec = 0f;
             yield return null;

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 public sealed class TabGroup : MonoBehaviour
@@ -27,11 +26,11 @@ public sealed class TabGroup : MonoBehaviour
 
     private void Awake()
     {
-        foreach (var tabPage in tabPages)
+        tabPages.ForEach(x =>
         {
-            tabPage.page.SetActive(activatePagesOnAwake);
-            tabPage.tab.OnClick += OnTabClick;
-        }
+            x.page.SetActive(activatePagesOnAwake);
+            x.tab.OnClick += OnTabClick;
+        });
     }
 
     private void Start()
@@ -46,10 +45,31 @@ public sealed class TabGroup : MonoBehaviour
 
     private void OnDestroy()
     {
-        foreach (var tabPage in tabPages)
+        tabPages.ForEach(x => x.tab.OnClick -= OnTabClick);
+    }
+
+    public void EnableUnselectedTabs()
+    {
+        SetUnselectedTabsState(needToEnable: true);
+    }
+
+    public void DisableUnselectedTabs()
+    {
+        SetUnselectedTabsState(needToEnable: false);
+    }
+
+    private void SetUnselectedTabsState(bool needToEnable)
+    {
+        tabPages.ForEach(x =>
         {
-            tabPage.tab.OnClick -= OnTabClick;
-        }
+            if (x == _selectedTabPage)
+            {
+                return;
+            }
+
+            var targetState = needToEnable ? TabButton.State.Idle : TabButton.State.Disable;
+            x.tab.SetState(targetState);
+        });
     }
 
     private void OnTabClick(TabButton clickedTab)

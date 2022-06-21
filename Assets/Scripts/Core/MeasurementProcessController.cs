@@ -7,18 +7,19 @@ using UnityEngine.Assertions;
 /// Проводит процесс измерений в диапазоне частот [lowCutOffFreq, highCutOffFreq] и уведомляет о ходе процесса подписчиков.
 /// </summary>
 [DisallowMultipleComponent]
-public sealed class ImpedanceMeasurer : MonoBehaviour
+public sealed class MeasurementProcessController : MonoBehaviour
 {
     private const float OctaveFactor = 0.7032f;
 
     public event Action OnImpedanceMeasuringStarted = delegate { };
     public event Action<string> OnImpedanceMeasuringErrorOccurred = delegate { };
     public event Action OnImpedanceMeasuringFinished = delegate { };
+    public event Action<float> OnImpedanceMeasuringProgressUpdated = delegate { };
     public event Action<ImpedanceMeasureData> OnImpedanceMeasured = delegate { };
 
     [Header("Dependencies")]
     [SerializeField] private GeneralSettings generalSettings;
-    [SerializeField] private ChannelsCalibrator channelsCalibrator;
+    [SerializeField] private CalibrationProcessController calibrationProcessController;
 
     private float _octaveScaler;
     private Coroutine _measuringProcessCoroutine;
@@ -40,7 +41,10 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
 
     public void StartMeasuring()
     {
-        StopMeasuring();
+        if (_measuringProcessCoroutine != null)
+        {
+            StopCoroutine(_measuringProcessCoroutine);
+        }
         
         _measuringProcessCoroutine = StartCoroutine(MeasuringCoroutine());
         OnImpedanceMeasuringStarted.Invoke();
@@ -52,18 +56,20 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
         {
             StopCoroutine(_measuringProcessCoroutine);
             StopGenerationAndListening();
+            OnImpedanceMeasuringFinished.Invoke();
         }
     }
 
     private IEnumerator MeasuringCoroutine()
     {
-        float previousFrequency, elapsedRetryTimeoutInSec = 0f;
+        float previousFrequency, nextFrequency, elapsedRetryTimeoutInSec = 0f;
         CurrentFrequency = generalSettings.LowCutOffFrequency;
         _octaveScaler = OctaveFactor * (1f / (int) generalSettings.FrequencyIncrement);
 
         do
         {
             previousFrequency = CurrentFrequency;
+            nextFrequency = (1f + _octaveScaler) * CurrentFrequency;
             
             _outputDeviceGenerator.StartGeneration(
                 generalSettings.OutputDeviceIndex,
@@ -97,9 +103,9 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                     inputDataSamples,
                     outputDataSamples,
                     generalSettings.ReferenceResistance,
-                    channelsCalibrator.GainCorrectionRatio,
-                    channelsCalibrator.LineInputImpedance,
-                    channelsCalibrator.GroundImpedance,
+                    calibrationProcessController.GainCorrectionRatio,
+                    calibrationProcessController.LineInputImpedance,
+                    calibrationProcessController.GroundImpedance,
                     CurrentFrequency,
                     generalSettings.SamplingRate
                 );
@@ -130,6 +136,20 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
                 
                 testImpedance += computedImpedance;
                 i++;
+                
+                float currentFrequencyWithAveragingOffset = Mathf.Lerp(
+                    CurrentFrequency,
+                    nextFrequency,
+                    (float) i / generalSettings.AveragingIterations
+                );
+                
+                float frequencyRangeProgress = Mathf.InverseLerp(
+                    generalSettings.LowCutOffFrequency,
+                    generalSettings.HighCutOffFrequency, 
+                    currentFrequencyWithAveragingOffset
+                );
+
+                OnImpedanceMeasuringProgressUpdated.Invoke(frequencyRangeProgress);
 
                 elapsedRetryTimeoutInSec = 0f;
                 yield return null;
@@ -158,8 +178,7 @@ public sealed class ImpedanceMeasurer : MonoBehaviour
             });
             
             StopGenerationAndListening();
-            
-            CurrentFrequency += CurrentFrequency * _octaveScaler;
+            CurrentFrequency = nextFrequency;
         }
         while (CurrentFrequency < generalSettings.HighCutOffFrequency + previousFrequency * _octaveScaler);
 
