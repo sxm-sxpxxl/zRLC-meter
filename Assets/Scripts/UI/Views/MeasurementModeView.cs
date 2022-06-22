@@ -20,7 +20,7 @@ public sealed class MeasurementModeView : MonoBehaviour
     
     [Header("Dash border settings")]
     [SerializeField] private GameObject container;
-    [SerializeField, Range(0f, 1f)] private float foldoutDurationInSec = 0.1f;
+    [SerializeField, Range(0f, 1f)] private float fadeDurationInSec = 0.25f;
     [SerializeField] private Material horizontalDashMaterial;
     [SerializeField] private Material verticalDashMaterial;
     [SerializeField, Range(0f, 10f)] private float speed = 1f;
@@ -144,10 +144,10 @@ public sealed class MeasurementModeView : MonoBehaviour
         float startValue = needToOpen ? 0f : 1f;
         float endValue = needToOpen ? 1f : 0f;
 
-        while (elapsedTime < foldoutDurationInSec)
+        while (elapsedTime < fadeDurationInSec)
         {
             elapsedTime += Time.deltaTime;
-            float nextAlpha = Mathf.Lerp(startValue, endValue, elapsedTime / foldoutDurationInSec);
+            float nextAlpha = Mathf.Lerp(startValue, endValue, elapsedTime / fadeDurationInSec);
             
             SetAlphaTo(verticalDashMaterial, nextAlpha);
             SetAlphaTo(horizontalDashMaterial, nextAlpha);

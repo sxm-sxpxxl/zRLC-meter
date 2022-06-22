@@ -1,5 +1,7 @@
-﻿using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// Обрабатывает закрытие приложения в режиме PlayMode редактора и режиме Runtime итоговой сборки.
