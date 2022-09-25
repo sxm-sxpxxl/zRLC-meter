@@ -1,8 +1,16 @@
-[![Unity Version](https://img.shields.io/badge/unity-2021.3%2B-blue)](https://unity3d.com/get-unity/download)
-
 <p align="center">
   <img alt="logo" src="https://user-images.githubusercontent.com/37039414/192148237-65908b21-b509-47a1-ad68-b9a036c3a115.png">
 </p>
+
+[![Unity Version](https://img.shields.io/badge/unity-2021.3%2B-blue)](https://unity3d.com/get-unity/download)
+
+## Содержание
+- [О проекте](#о-проекте)
+- [Схема подключения](#схема-подключения)
+- [Калибровка](#калибровка)
+- [Работа с приложением](#работа-с-приложением)
+- [Зависимости](#зависимости)
+- [Полезные ссылки](#полезные-ссылки)
 
 ## О проекте
 
