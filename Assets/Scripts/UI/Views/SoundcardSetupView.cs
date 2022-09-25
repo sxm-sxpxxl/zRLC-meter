@@ -68,7 +68,7 @@ public sealed class SoundcardSetupView : MonoBehaviour
     {
         generalSettings.InputDeviceIndex = _sharedInputDeviceIndexMap[dropdownIndex];
 
-        int inputChannelsCount = DeviceDriver.GetDeviceChannelCount(dropdownIndex, DeviceType.Input);
+        int inputChannelsCount = DeviceDriver.GetDeviceChannelCount(generalSettings.InputDeviceIndex, DeviceType.Input);
         inputChannelCountText.text = $"Channels: {inputChannelsCount}";
         
         OnInputDeviceSelected.Invoke(_sharedInputDeviceIndexMap[dropdownIndex], inputChannelsCount);
