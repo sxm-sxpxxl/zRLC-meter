@@ -79,7 +79,8 @@
 ## Зависимости
 - Для кросс-платформенной обработки ввода-вывода с поддержкой мультиканального ввода с низкой задержкой использовалась библиотека 
 [jp.keijiro.libsoundio](https://github.com/keijiro/jp.keijiro.libsoundio);
-- Для сохранения графиков импеданса в формате PNG при помощи нативного файлового проводника использовался плагин [UnityStandaloneFileBrowser](https://github.com/gkngkc/UnityStandaloneFileBrowser).
+- Для сохранения графиков импеданса в формате PNG при помощи нативного файлового проводника использовался плагин [UnityStandaloneFileBrowser](https://github.com/gkngkc/UnityStandaloneFileBrowser);
+- Для логгирования ошибок, вспомогательных сведений времени выполнения используется плагин [UnityIngameDebugConsole](https://github.com/yasirkula/UnityIngameDebugConsole).
 
 ## Полезные ссылки
 Для более пристального знакомства с проектом рекомендую к изучению следующие ресурсы, во многом послужившие источником вдохновения при разработке:
